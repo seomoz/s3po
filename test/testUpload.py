@@ -39,22 +39,5 @@ class TestCrawled(unittest.TestCase):
         # Now upload the big one
         self.assertTrue(self.connection.uploadString(self.bucket, self.key, self.large))
         self.assertEqual(self.connection.downloadString(self.bucket, self.key), self.large)
-            
-    def test_multipart_gzip_upload(self):
-        logger.info('Testing multipart gzip upload')
-        
-        # # This is our test file
-        # with file('testing.tmp', 'w+') as f:
-        #     for i in range(1024 * 1024 * 20):
-        #         f.write(str(i))
-        # 
-        # size = os.stat('testing.tmp').st_size
-        # self.assertTrue(S3.uploadFile(bucket, key, 'testing.tmp', compress='gzip'))
-        # # Now remove the original file
-        # os.remove('testing.tmp')
-        # # And now download it
-        # fname = S3.download(bucket, key)
-        # self.assertEqual(fname, key)
-        # self.assertEqual(os.stat('testing.tmp').st_size, size, 'Did not download original content')
-
+    
 unittest.main()
