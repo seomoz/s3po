@@ -450,7 +450,7 @@ class Connection(object):
         with file(path) as f:
             if self._upload(bucket, key, f, size, headers, None, retries):
                 if self._should(self.delete, delete):
-                    os.remove(fname)
+                    os.remove(path)
                 return True
             return False
 
