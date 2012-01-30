@@ -1,9 +1,12 @@
+#! /usr/bin/env python
+
 import os
 import time
 import gzip
 import zlib
 import tempfile
 import subprocess
+from s3po import logger
 from cStringIO import StringIO
 
 # This is a utility class for all sorts of little things
@@ -21,7 +24,7 @@ def decompressFile(path, compression, tempdir=None):
         fd, newpath = tempfile.mkstemp(dir=tempdir)
         with os.fdopen(fd, 'w+') as outf:
             with file(path) as inf:
-                if util.decompressToFile(inf, outf, compression):
+                if decompressToFile(inf, outf, compression):
                     # Remove the compressed file
                     os.remove(path)
                     # Strip off the extension if it exists
@@ -70,7 +73,7 @@ def compressFile(path, compression):
         newpath = '%s.zlib' % path
         with file(newpath, 'w+') as outf:
             with file(path) as inf:
-                if util.compressToFile(inf, outf, compression):
+                if compressToFile(inf, outf, compression):
                     # Remove the uncompressed file
                     os.remove(path)
                     return newpath

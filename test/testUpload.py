@@ -18,7 +18,7 @@ class TestCrawled(unittest.TestCase):
         self.small  = '0' * 1024 * 1024
         # This is 11MB, and should be uploaded with multipart uploads automatically
         self.large  = '01234567890' * 1024 * 1024
-        self.bucket = 'pr1-store'
+        self.bucket = 'blogscape'
         self.key    = '000000000-testing-%i' % int(time.time())
         self.connection = s3po.Connection(async=False)
     

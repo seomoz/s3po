@@ -145,7 +145,7 @@ class Connection(object):
     def _download(self, bucket, key, retries=3):
         b = self.conn.get_bucket(bucket)
         # Make a file that we'll write into
-        fd, fname = tempfile.mkstemp(self.tempdir)
+        fd, fname = tempfile.mkstemp(dir=self.tempdir)
         for i in range(retries):
             try:
                 with os.fdopen(fd, 'w+') as f:
@@ -217,13 +217,13 @@ class Connection(object):
                     if i < retries - 1:
                         logger.exception('Incomplete upload')
                         util.backoff(i)
-                    elif failSilent:
+                    elif silent:
                         logger.exception('Failing silently for %s' % key)
                     else:
                         raise e
             return False
         except Exception as e:
-            if failSilent:
+            if silent:
                 return False
             raise e
     
@@ -344,7 +344,7 @@ class Connection(object):
         # Asynchronous string uploads don't... really work in all circumstances.
         # As such, in that case, we'll just write the string to a temp file
         if self._should(self.async, async):
-            fd, path = tempfile.mkstemp(self.tempdir)
+            fd, path = tempfile.mkstemp(dir=self.tempdir)
             with os.fdopen(fd, 'w+') as f:
                 f.write(s)
             return self.uploadFile(bucket, key, path, headers, compress, retries, async, True, silent)

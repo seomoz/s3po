@@ -2,8 +2,8 @@
 
 import os
 import time
-import s3po
 import unittest
+import s3po.util
 from cStringIO import StringIO
 
 # Logging stuff
