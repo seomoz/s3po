@@ -341,7 +341,7 @@ class Connection(object):
                 return False
             raise e
     
-    def _mupload(self, bucket, key, fp, size=None, chunk=10 * 1024 * 1024, retries=3, failSilent=False, **kwargs):
+    def _mupload(self, bucket, key, fp, size=None, chunk=10 * 1024 * 1024, retries=3, silent=False, **kwargs):
         # This method works very much like the upload function, except that it
         # starts and completes a multi-part upload. NOTE: the file pointer must
         # be seekable
@@ -416,7 +416,7 @@ class Connection(object):
     # =========================
     # Helper niceness functions
     # =========================
-    def uploadFile(self, bucket, key, path, headers=None, compress=None, retries=3, async=None, delete=None):
+    def uploadFile(self, bucket, key, path, headers=None, compress=None, retries=3, async=None, delete=None, silent=False):
         # If we're doing this asynchronously, then we should go ahead and
         # just push a request on and immediately return
         if self._should(self.async, async):
@@ -448,24 +448,24 @@ class Connection(object):
         size = os.stat(path).st_size
         logger.debug('Uploading')
         with file(path) as f:
-            if self._upload(bucket, key, f, size, headers, None, retries):
+            if self._upload(bucket, key, f, size, headers, None, retries, silent):
                 if self._should(self.delete, delete):
-                    os.remove(path)
+                    os.remove(fname)
                 return True
             return False
 
-    def uploadString(self, bucket, key, s, headers=None, compress=None, retries=3, async=None):
+    def uploadString(self, bucket, key, s, headers=None, compress=None, retries=3, async=None, silent=False):
         # Asynchronous string uploads don't... really work in all circumstances.
         # As such, in that case, we'll just write the string to a temp file
         if self._should(self.async, async):
             fd, path = tempfile.mkstemp()
             with os.fdopen(fd, 'w+') as f:
                 f.write(s)
-            return self.uploadFile(bucket, key, path, headers, compress, retries, async, delete=True)
+            return self.uploadFile(bucket, key, path, headers, compress, retries, async, True, silent)
         else:
             size = len(s)
             f = StringIO(s)
-            return self._upload(bucket, key, f, size, headers, compress, retries)
+            return self._upload(bucket, key, f, size, headers, compress, retries, silent=silent)
     
     def downloadFile(self, bucket, key, retries=3, filename=None):
         path = self._download(bucket, key, retries)
