@@ -30,9 +30,6 @@ import Queue
 import threading
 
 # Compression stuff
-import gzip
-import zlib
-import subprocess
 from cStringIO import StringIO
 
 # Boto
@@ -81,120 +78,6 @@ def uploadRequest(bucket, key, path, headers=None, compress=None, retries=3, del
         'state'   : 'queued'
     }
 
-# This is a utility class for all sorts of little things
-class util(object):
-    '''Utility functions, especially for compression / decompression'''
-    @staticmethod
-    def decompressFile(path, compression):
-        if compression == 'gzip':
-            if not path.endswith('.gz'):
-                newpath = '%s.gz' % path
-                os.rename(path, newpath)
-                subprocess.check_call(['gunzip', '-f', newpath])
-                return path
-            else:
-                subprocess.check_call(['gunzip', '-f', path])
-                return path[:-3]
-        else:
-            fd, newpath = tempfile.mkstemp()
-            with os.fdopen(fd, 'w+') as outf:
-                with file(path) as inf:
-                    if util.decompressToFile(inf, outf, compression):
-                        # Remove the compressed file
-                        os.remove(path)
-                        # Strip off the extension if it exists
-                        extension = '.%s' % compression
-                        if path.endswith(extension):
-                            path = path[:-len(extension)]
-                        # Rename this file to the original file name, with
-                        # the extension (if any) stipped.
-                        os.rename(newpath, path)
-                        return path
-                    else:
-                        return False
-    
-    @staticmethod
-    def decompressToFile(inf, outf, compression):
-        # Given an input stream that's compressed, and the compression type,
-        # read in the compressed format, and write out the decompressed content
-        inf.seek(0)
-        if compression == 'gzip':
-            logger.info('Decompressing gzip content...')
-            # Make a gzip file reader, and then write its decompressed
-            # contents out to the file
-            tmp = gzip.GzipFile(fileobj=inf, mode='r')
-            outf.writelines(tmp)
-        elif compression == 'deflate' or compression == 'zlib':
-            logger.info('Decompressing zlib/deflate content...')
-            # Prepare to read compressed content
-            tmp = zlib.decompressobj()
-            # Read the result in 1MB chunks, decompress, and write to the output
-            data = inf.read(1024 * 1024)
-            while data:
-                outf.write(tmp.decompress(data))
-                data = inf.read(1024 * 1024)
-            outf.write(tmp.flush())
-        else:
-            outf.writelines(inf)
-        return True
-    
-    @staticmethod
-    def compressFile(path, compression):
-        if compression == 'gzip':
-            try:
-                subprocess.check_call(['gzip', '-f', path])
-                return '%s.gz' % path
-            except subprocess.CalledProcessError:
-                return False
-        else:
-            newpath = '%s.zlib' % path
-            with file(newpath, 'w+') as outf:
-                with file(path) as inf:
-                    if util.compressToFile(inf, outf, compression):
-                        # Remove the uncompressed file
-                        os.remove(path)
-                        return newpath
-                    else:
-                        return False
-    
-    @staticmethod
-    def compressToFile(inf, outf, compression):
-        # Given an input stream that is uncompressed, write its compressed
-        # contenst out to the provided file
-        inf.seek(0)
-        if compression == 'gzip':
-            logger.info('Compressing as gzip...')
-            gzip.GzipFile(fileobj=outf, mode='wb').writelines(inf)
-        elif compression == 'zlib' or compression == 'deflate':
-            logger.info('Compressing as zlib/deflate...')
-            # Prepare to read uncompressed content
-            tmp = zlib.compressobj()
-            # Read in 1MB chunks
-            data = inf.read(1024 * 1024)
-            while data:
-                outf.write(tmp.compress(data))
-                data = inf.read(1024 * 1024)
-            outf.write(tmp.flush())
-        else:
-            outf.writelines(inf)
-        return True
-    
-    @staticmethod
-    def backoff(attempt):
-        # How much should we backoff? Exponential with a 
-        # base of 30. Return the number of seconds to wait
-        sleep = 30 * (2 ** attempt)
-        logger.info('Sleeping %is after attempt %i' % (sleep, attempt))
-        time.sleep(sleep)
-    
-    @staticmethod
-    def pathFromKey(key):
-        return key.rpartition('')[0]
-    
-    @staticmethod
-    def filenameFromKey(key):
-        return key.rpartition('/')[-1]
-
 class Connection(object):
     '''This class helps out with uploading and downloading files to and from S3'''
     # This is the user's access_id
@@ -216,8 +99,10 @@ class Connection(object):
     async      = True
     # Should we clean up files after uploading them?
     delete     = True
+    # Where we should store temporary files
+    tempdir    = None
     
-    def __init__(self, access_id=None, secret_key=None, queue=None, async=True, delete=True, *args, **kwargs):
+    def __init__(self, access_id=None, secret_key=None, queue=None, async=True, delete=True, tempdir=None, *args, **kwargs):
         '''Initialize this object, very much in the same way you initialize an S3 connection in boto'''
         self.conn = S3Connection(access_id, secret_key, *args, **kwargs)
         # Set the queue this draws from
@@ -227,6 +112,7 @@ class Connection(object):
             self.queue = Queue.Queue()
         # Set whether or not this is asynchronous
         self.async = async
+        self.tempdir = tempdir
     
     def runLoop(self, threaded=True):
         '''Run the upload loop. If threaded is False, it runs in the main thread'''
@@ -259,7 +145,7 @@ class Connection(object):
     def _download(self, bucket, key, retries=3):
         b = self.conn.get_bucket(bucket)
         # Make a file that we'll write into
-        fd, fname = tempfile.mkstemp()
+        fd, fname = tempfile.mkstemp(self.tempdir)
         for i in range(retries):
             try:
                 with os.fdopen(fd, 'w+') as f:
@@ -276,7 +162,7 @@ class Connection(object):
                     if k.size != size:
                         raise Exception('Download incomplete: only %i of %i bytes' % (int(k.size or 0), size))
                     elif k.content_encoding:
-                        return util.decompressFile(fname)
+                        return util.decompressFile(fname, k.content_encoding, self.tempdir)
                     else:
                         return fname
             except Exception as e:
@@ -304,7 +190,7 @@ class Connection(object):
                     size = len(f.getvalue())
                     f = StringIO(f.getvalue())
                 else:
-                    f = tempfile.TemporaryFile()
+                    f = tempfile.TemporaryFile(dir=self.tempdir)
                     util.compressToFile(fp, f, compress)
                     f.flush()
                     size = os.fstat(f.fileno()).st_size
@@ -458,7 +344,7 @@ class Connection(object):
         # Asynchronous string uploads don't... really work in all circumstances.
         # As such, in that case, we'll just write the string to a temp file
         if self._should(self.async, async):
-            fd, path = tempfile.mkstemp()
+            fd, path = tempfile.mkstemp(self.tempdir)
             with os.fdopen(fd, 'w+') as f:
                 f.write(s)
             return self.uploadFile(bucket, key, path, headers, compress, retries, async, True, silent)

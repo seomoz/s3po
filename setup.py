@@ -44,7 +44,7 @@ and another agent should take care of the rest.''',
 	author           = 'Dan Lecocq',
 	author_email     = 'dan@seomoz.org',
 	url              = 'http://github.com/seomoz/s3po',
-    py_modules       = ['s3po'],
+    packages         = ['s3po'],
 	license          = 'MIT',
 	platforms        = 'Posix; MacOS X',
 	classifiers      = [
