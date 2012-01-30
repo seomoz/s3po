@@ -162,7 +162,7 @@ class Connection(object):
                     if k.size != size:
                         raise Exception('Download incomplete: only %i of %i bytes' % (int(k.size or 0), size))
                     elif k.content_encoding:
-                        return util.decompressFile(fname, k.content_encoding, self.tempdir)
+                        return util.decompressFile(fname, k.content_encoding)
                     else:
                         return fname
             except Exception as e:
@@ -326,7 +326,7 @@ class Connection(object):
             headers = headers or {}
             headers['Content-Encoding'] = compress
             # Now compress it
-            path = util.compressFile(path)
+            path = util.compressFile(path, compress)
             if not path:
                 return False
         
