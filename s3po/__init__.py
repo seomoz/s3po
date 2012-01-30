@@ -30,7 +30,6 @@ import Queue
 import threading
 
 # Compression stuff
-import util
 from cStringIO import StringIO
 
 # Boto
@@ -370,3 +369,6 @@ class Connection(object):
             os.remove(fname)
             return data
         return None
+
+# Have to do this one at the end
+import util
