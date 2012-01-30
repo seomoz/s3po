@@ -30,6 +30,7 @@ import Queue
 import threading
 
 # Compression stuff
+import util
 from cStringIO import StringIO
 
 # Boto
