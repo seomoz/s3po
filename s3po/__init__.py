@@ -145,8 +145,8 @@ class Connection(object):
     def _download(self, bucket, key, retries=3):
         b = self.conn.get_bucket(bucket)
         # Make a file that we'll write into
-        fd, fname = tempfile.mkstemp(dir=self.tempdir)
         for i in range(retries):
+            fd, fname = tempfile.mkstemp(dir=self.tempdir)
             try:
                 with os.fdopen(fd, 'w+') as f:
                     # Explicitly truncate the file
@@ -166,6 +166,12 @@ class Connection(object):
                     else:
                         return fname
             except Exception as e:
+                # Alright, some exception occurred. Let's get rid of the old file
+                # that we were going to write to.
+                try:
+                    os.remove(fname)
+                except OSError:
+                    pass
                 if i < retries - 1:
                     logger.exception('Download failed...')
                     util.backoff(i)
@@ -358,6 +364,8 @@ class Connection(object):
         if not filename:
             return path
         else:
+            # First, let's make sure that all the directories for this file exist
+            os.makedirs(filename)
             os.rename(path, filename)
             return filename
     
