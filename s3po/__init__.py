@@ -365,7 +365,10 @@ class Connection(object):
             return path
         else:
             # First, let's make sure that all the directories for this file exist
-            os.makedirs(filename)
+            try:
+                os.makedirs(os.path.split(filename)[0])
+            except OSError:
+                pass
             os.rename(path, filename)
             return filename
     
