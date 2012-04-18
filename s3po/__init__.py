@@ -162,14 +162,15 @@ class Connection(object):
                     if k.size != size:
                         raise Exception('Download incomplete: only %i of %i bytes' % (int(k.size or 0), size))
                     elif k.content_encoding:
-                        return util.decompressFile(fname, k.content_encoding)
+                        return util.decompressFile(fname, k.content_encoding, self.tempdir)
                     else:
                         return fname
             except Exception as e:
                 # Alright, some exception occurred. Let's get rid of the old file
                 # that we were going to write to.
                 try:
-                    os.remove(fname)
+                    if os.path.exists(fname):
+                        os.remove(fname)
                 except OSError:
                     pass
                 if i < retries - 1:
