@@ -14,13 +14,18 @@ logger.setLevel(logging.DEBUG)
 class TestCrawled(unittest.TestCase):
     def setUp(self):
         logger.info('Setting up')
-        # This is 1MB, and should not be uploaded with multipart uploads automatically
+        # This is 1MB, and should not be uploaded with multipart uploads 
+        # automatically
         self.small  = '0' * 1024 * 1024
-        # This is 11MB, and should be uploaded with multipart uploads automatically
+        # This is 11MB, and should be uploaded with multipart uploads 
+        # automatically
         self.large  = '01234567890' * 1024 * 1024
         self.bucket = 'blogscape'
         self.key    = '000000000-testing-%i' % int(time.time())
-        self.connection = s3po.Connection(async=False)
+        self.connection = s3po.Connection(
+            'access_id',
+            'secret_key',
+            async=False)
     
     def tearDown(self):
         logger.info('Tearing down...')
@@ -32,12 +37,18 @@ class TestCrawled(unittest.TestCase):
             pass
     
     def test_upload(self):
-        # Upload a string, and then download it, to make sure that we get everything back
-        self.assertTrue(self.connection.uploadString(self.bucket, self.key, self.small))
-        self.assertEqual(self.connection.downloadString(self.bucket, self.key), self.small)
+        # Upload a string, and then download it, to make sure that we get 
+        # everything back
+        self.assertTrue(self.connection.uploadString(
+            self.bucket, self.key, self.small))
+        self.assertEqual(self.connection.downloadString(
+            self.bucket, self.key), self.small)
         
         # Now upload the big one
-        self.assertTrue(self.connection.uploadString(self.bucket, self.key, self.large))
-        self.assertEqual(self.connection.downloadString(self.bucket, self.key), self.large)
-    
-unittest.main()
+        self.assertTrue(self.connection.uploadString(
+            self.bucket, self.key, self.large))
+        self.assertEqual(self.connection.downloadString(
+            self.bucket, self.key), self.large)
+
+if __name__ == '__main__':
+    unittest.main()

@@ -25,10 +25,6 @@ import os
 import time
 import tempfile
 
-# Threading stuff
-import Queue
-import threading
-
 # Compression stuff
 from cStringIO import StringIO
 
@@ -49,98 +45,43 @@ handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-# This represents a request to upload a file, for asynchronous use
-def uploadRequest(bucket, key, path, headers=None, compress=None, retries=3, delete=None, pingback=None):
-    '''Returns a dictionary representative of the request'''
-    return {
-        # The bucket and key where we should upload
-        'bucket'  : bucket,
-        'key'     : key,
-        # The local absolute path of the file to upload
-        'path'    : os.path.abspath(path),
-        # Any headers you want set on the S3 object's response headers
-        'headers' : headers or {},
-        # Should we automatically compress this object?
-        # Accepted:
-        #   None
-        #   'gzip'
-        #   'zlib'
-        'compress': compress,
-        # How many times should we retry this upload?
-        'retries' : retries,
-        # Any url to ping with a POST of the json blob?
-        'pingback': pingback,
-        # State of the upload
-        # Valid values:
-        #   'queued'   (waiting for an upload)
-        #   'errored'  (failed uploading)
-        #   'uploaded' (completed successfully)
-        'state'   : 'queued'
-    }
-
 class Connection(object):
     '''This class helps out with uploading and downloading files to and from S3'''
-    # This is the user's access_id
-    access_id  = None
-    # And secret
-    secret_key = None
     # Connection
     conn       = None
-    # The upload queue
-    queue      = None
-    # The thread in which the uploader is running
-    thread     = None
-    # Should the upload loop be running?
-    running    = False
-    # This is the interval to use for sleeping between checking to
-    # see if there are new requests for uploading
-    interval   = 60
     # Should request to upload a file be treated as asynchronous?
     async      = True
     # Should we clean up files after uploading them?
     delete     = True
     # Where we should store temporary files
     tempdir    = None
+    # Greenlet pool
+    pool       = None
     
-    def __init__(self, access_id=None, secret_key=None, queue=None, async=True, delete=True, tempdir=None, *args, **kwargs):
-        '''Initialize this object, very much in the same way you initialize an S3 connection in boto'''
+    def __init__(self, access_id=None, secret_key=None, async=True, delete=True, 
+        tempdir=None, *args, **kwargs):
+        '''Initialize this object, very much in the same way you initialize an 
+        S3 connection in boto'''
         self.conn = S3Connection(access_id, secret_key, *args, **kwargs)
-        # Set the queue this draws from
-        if queue:
-            self.queue = queue
-        else:
-            self.queue = Queue.Queue()
         # Set whether or not this is asynchronous
         self.async = async
         self.tempdir = tempdir
     
-    def runLoop(self, threaded=True):
-        '''Run the upload loop. If threaded is False, it runs in the main thread'''
-        if threaded:
-            if self.thread:
-                logger.warn('Threaded runLoop called again on Connection');
-            else:
-                self.thread = threading.Thread(target=self.runLoop, kwargs={'threaded': False})
-                self.thread.start()
-        else:
-            self.thread = threading.current_thread()
-            # Mark that we should be running
-            self.running = True
-            # If we should stop uploading, then another thread
-            # will have set self.running to False
-            while self.running:
-                # Go through a loop to upload each of the pieces of work
-                # in the specified queue, and upload them
-                while len(self.queue):
-                    next = self.queue.pop()
-                # After uploading any files that might be there, we should
-                # sleep for a little while
-                time.sleep(self.interval)
-            self.thread = None
+    def __del__(self):
+        # If we have a pool going, let's make sure we wait
+        if self.pool:
+            logger.info('Waiting for uploads and downloads to finish...')
+            self.pool.wait()
     
-    def stopLoop(self):
-        '''Stops the upload loop from running'''
-        self.stopped = True
+    def get_pool(self):
+        if self.pool == None:
+            from gevent.pool import Pool
+            self.pool = Pool(20)
+        return self.pool
+    
+    def batch(self, poolsize=20):
+        from .batch import Batch
+        return Batch(self, poolsize)
     
     def _download(self, bucket, key, retries=3):
         b = self.conn.get_bucket(bucket)
@@ -180,7 +121,8 @@ class Connection(object):
                     raise e
         return False
 
-    def _upload(self, bucket, key, fp, size, headers=None, compress=None, retries=3, silent=False):
+    def _upload(self, bucket, key, fp, size, headers=None, compress=None, 
+        retries=3, silent=False):
         # Make our headers object
         headers = headers or {}
         try:
@@ -208,7 +150,8 @@ class Connection(object):
                 f.seek(0)
                 try:
                     if size < 10 * 1024 * 1024:
-                        # If the upload is less than 10MB, upload it the conventional way
+                        # If the upload is less than 10MB, upload it the 
+                        # conventional way
                         k = s3.key.Key(b, key)
                         k.set_contents_from_file(f, headers=headers)
                         if k.size != size:
@@ -234,7 +177,8 @@ class Connection(object):
                 return False
             raise e
     
-    def _mupload(self, bucket, key, fp, size=None, chunk=10 * 1024 * 1024, retries=3, silent=False, **kwargs):
+    def _mupload(self, bucket, key, fp, size=None, chunk=10 * 1024 * 1024, 
+        retries=3, silent=False, **kwargs):
         # This method works very much like the upload function, except that it
         # starts and completes a multi-part upload. NOTE: the file pointer must
         # be seekable
@@ -309,18 +253,16 @@ class Connection(object):
     # =========================
     # Helper niceness functions
     # =========================
-    def uploadFile(self, bucket, key, path, headers=None, compress=None, retries=3, async=None, delete=None, silent=False):
+    def uploadFile(self, bucket, key, path, headers=None, compress=None, 
+        retries=3, async=None, delete=None, silent=False):
         # If we're doing this asynchronously, then we should go ahead and
         # just push a request on and immediately return
         if self._should(self.async, async):
             logger.debug('Using the async mechanism')
             delete = self._should(self.delete, delete)
-            try:
-                return self.queue.put(uploadRequest(
-                    bucket, key, path, headers, compress, retries, delete))
-            except AttributeError:
-                return self.queue.push(uploadRequest(
-                    bucket, key, path, headers, compress, retries, delete))
+            self.get_pool().spawn(self.uploadRequest,
+                bucket, key, path, headers, compress, retries, delete)
+            return True
         # Make sure that the base is an absolute one
         path = os.path.abspath(path)
         # As little as I like to do this, it must be done. Unfortunately the 
@@ -347,14 +289,17 @@ class Connection(object):
                 return True
             return False
 
-    def uploadString(self, bucket, key, s, headers=None, compress=None, retries=3, async=None, silent=False):
+    def uploadString(self, bucket, key, s, headers=None, compress=None, 
+        retries=3, async=None, silent=False):
         # Asynchronous string uploads don't... really work in all circumstances.
         # As such, in that case, we'll just write the string to a temp file
         if self._should(self.async, async):
             fd, path = tempfile.mkstemp(dir=self.tempdir)
             with os.fdopen(fd, 'w+') as f:
                 f.write(s)
-            return self.uploadFile(bucket, key, path, headers, compress, retries, async, True, silent)
+            self.get_pool().spawn(self.uploadFile, bucket, key, path, headers, 
+                compress, retries, False, True, silent)
+            return True
         else:
             size = len(s)
             f = StringIO(s)

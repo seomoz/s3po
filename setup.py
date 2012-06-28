@@ -22,36 +22,37 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 try:
-	from setuptools import setup
-	extra = {
-		'install_requires' : ['boto']
-	}
+    from setuptools import setup
+    extra = {
+        'install_requires' : ['boto', 'gevent']
+    }
 except ImportError:
-	from distutils.core import setup
-	extra = {
-		'dependencies' : ['boto']
-	}
+    from distutils.core import setup
+    extra = {
+        'dependencies' : ['boto', 'gevent']
+    }
 
 setup(
-	name             = 's3po',
-	version          = '0.1.0',
-	description      = 'An uploading daemon for S3',
-	long_description = '''Boto is a wonderful library. Sometimes, though, I just want 
-to describe a file that I want to upload, and then have it uploaded asynchronously. 
-I don't want to worry about whether or not I should use a multi-part upload, or worry
-about having to back off from S3. I should just be able to enqueue a file to be uploaded
-and another agent should take care of the rest.''',
-	author           = 'Dan Lecocq',
-	author_email     = 'dan@seomoz.org',
-	url              = 'http://github.com/seomoz/s3po',
+    name             = 's3po',
+    version          = '0.2.0',
+    description      = 'An uploading daemon for S3',
+    long_description = '''Boto is a wonderful library. Sometimes, though, I just 
+        want to describe a file that I want to upload, and then have it uploaded 
+        asynchronously. I don't want to worry about whether or not I should use 
+        a multi-part upload, or worry about having to back off from S3. I should 
+        just be able to enqueue a file to be uploaded and another agent should 
+        take care of the rest.''',
+    author           = 'Dan Lecocq',
+    author_email     = 'dan@seomoz.org',
+    url              = 'http://github.com/seomoz/s3po',
     packages         = ['s3po'],
-	license          = 'MIT',
-	platforms        = 'Posix; MacOS X',
-	classifiers      = [
-		'License :: OSI Approved :: MIT License',
-		'Development Status :: 3 - Alpha',
-		'Environment :: Web Environment',
-		'Intended Audience :: Developers',
-		'Topic :: Internet :: WWW/HTTP'],
-	**extra
+    license          = 'MIT',
+    platforms        = 'Posix; MacOS X',
+    classifiers      = [
+        'License :: OSI Approved :: MIT License',
+        'Development Status :: 3 - Alpha',
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'Topic :: Internet :: WWW/HTTP'],
+    **extra
 )
