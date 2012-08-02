@@ -132,7 +132,7 @@ class Connection(object):
             b = self.conn.get_bucket(bucket)
             
             if compress:
-                headers['Content-Encoding'] = compress
+                headers['Content-Encoding'] = 'deflate' if compress == 'zlib' else compress
                 if size < 50 * 1024 * 1024:
                     f = StringIO()
                     util.compressToFile(fp, f, compress)
@@ -273,7 +273,7 @@ class Connection(object):
             logger.debug('Compress')
             # Ensure headers is at least a dictionary
             headers = headers or {}
-            headers['Content-Encoding'] = compress
+            headers['Content-Encoding'] = 'deflate' if compress == 'zlib' else compress
             # Now compress it
             path = util.compressFile(path, compress)
             if not path:
