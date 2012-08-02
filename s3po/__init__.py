@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 # Copyright (c) 2011 SEOmoz
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -9,10 +9,10 @@
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -57,32 +57,32 @@ class Connection(object):
     tempdir    = None
     # Greenlet pool
     pool       = None
-    
-    def __init__(self, access_id=None, secret_key=None, async=True, delete=True, 
+
+    def __init__(self, access_id=None, secret_key=None, async=True, delete=True,
         tempdir=None, *args, **kwargs):
-        '''Initialize this object, very much in the same way you initialize an 
+        '''Initialize this object, very much in the same way you initialize an
         S3 connection in boto'''
         self.conn = S3Connection(access_id, secret_key, *args, **kwargs)
         # Set whether or not this is asynchronous
         self.async = async
         self.tempdir = tempdir
-    
+
     def __del__(self):
         # If we have a pool going, let's make sure we wait
         if self.pool:
             logger.info('Waiting for uploads and downloads to finish...')
             self.pool.wait()
-    
+
     def get_pool(self):
         if self.pool == None:
             from gevent.pool import Pool
             self.pool = Pool(20)
         return self.pool
-    
+
     def batch(self, poolsize=20):
         from .batch import Batch
         return Batch(self, poolsize)
-    
+
     def _download(self, bucket, key, retries=3):
         b = self.conn.get_bucket(bucket)
         # Make a file that we'll write into
@@ -121,7 +121,7 @@ class Connection(object):
                     raise e
         return False
 
-    def _upload(self, bucket, key, fp, size, headers=None, compress=None, 
+    def _upload(self, bucket, key, fp, size, headers=None, compress=None,
         retries=3, silent=False):
         # Make our headers object
         headers = headers or {}
@@ -130,7 +130,7 @@ class Connection(object):
             # the key that we'll be writing to. Also, set aside the headers
             # we'll be using
             b = self.conn.get_bucket(bucket)
-            
+
             if compress:
                 headers['Content-Encoding'] = 'deflate' if compress == 'zlib' else compress
                 if size < 50 * 1024 * 1024:
@@ -145,12 +145,12 @@ class Connection(object):
                     size = os.fstat(f.fileno()).st_size
             else:
                 f = fp
-            
+
             for i in range(retries):
                 f.seek(0)
                 try:
                     if size < 10 * 1024 * 1024:
-                        # If the upload is less than 10MB, upload it the 
+                        # If the upload is less than 10MB, upload it the
                         # conventional way
                         k = s3.key.Key(b, key)
                         k.set_contents_from_file(f, headers=headers)
@@ -176,20 +176,20 @@ class Connection(object):
             if silent:
                 return False
             raise e
-    
-    def _mupload(self, bucket, key, fp, size=None, chunk=10 * 1024 * 1024, 
+
+    def _mupload(self, bucket, key, fp, size=None, chunk=10 * 1024 * 1024,
         retries=3, silent=False, **kwargs):
         # This method works very much like the upload function, except that it
         # starts and completes a multi-part upload. NOTE: the file pointer must
         # be seekable
-        
+
         # This is the minimum chunk size
         limit = 5 * 1024 * 1024
         chunk = max(limit, chunk)
-        
+
         b = self.conn.get_bucket(bucket)
         mp = b.initiate_multipart_upload(key, **kwargs)
-        
+
         # This holds the last data that we wrote
         last = ''
         # And this holds the data we're about to write
@@ -203,7 +203,7 @@ class Connection(object):
             last = next
             next = ''
             fp.seek(start)
-            
+
             # If we were fortunate enough to be told how big the file is,
             # then we should make use of that information to see if this
             # is the last chunk or not. If we couldn't upload this chunk
@@ -216,9 +216,9 @@ class Connection(object):
             while len(d):
                 next += d
                 d = fp.read(len(next) - chunk)
-            
+
             # logger.debug('Next chunk is %i bytes starting at %i' % (len(next), start))
-            
+
             if len(next) == 0:
                 # If we reach this point, then the last chunk was big enough
                 # to satisfy the size limit, and to let's not re-upload
@@ -237,23 +237,23 @@ class Connection(object):
                 return mp
             else:
                 mp.upload_part_from_file(StringIO(next), part)
-            
+
             # Update the part number
             part += 1
             # Update the range
             start += chunk
         return False
-    
+
     def _should(self, globl, loc):
         # Given the global and local configuration, decide whether we should
         # use the default behavior
         # Returns whether or not to delete a file given the configuration
         return (globl == False and loc == True) or (globl != False and loc != False)
-        
+
     # =========================
     # Helper niceness functions
     # =========================
-    def uploadFile(self, bucket, key, path, headers=None, compress=None, 
+    def uploadFile(self, bucket, key, path, headers=None, compress=None,
         retries=3, async=None, delete=None, silent=False):
         # If we're doing this asynchronously, then we should go ahead and
         # just push a request on and immediately return
@@ -265,8 +265,8 @@ class Connection(object):
             return True
         # Make sure that the base is an absolute one
         path = os.path.abspath(path)
-        # As little as I like to do this, it must be done. Unfortunately the 
-        # gzip module in python is extremely slow (by almost an order of 
+        # As little as I like to do this, it must be done. Unfortunately the
+        # gzip module in python is extremely slow (by almost an order of
         # magnitude). So, we're just going to shell out to the gzip command
         # until there exists an efficient implementation
         if compress:
@@ -278,7 +278,7 @@ class Connection(object):
             path = util.compressFile(path, compress)
             if not path:
                 return False
-        
+
         # And upload
         size = os.stat(path).st_size
         logger.debug('Uploading')
@@ -289,7 +289,7 @@ class Connection(object):
                 return True
             return False
 
-    def uploadString(self, bucket, key, s, headers=None, compress=None, 
+    def uploadString(self, bucket, key, s, headers=None, compress=None,
         retries=3, async=None, silent=False):
         # Asynchronous string uploads don't... really work in all circumstances.
         # As such, in that case, we'll just write the string to a temp file
@@ -297,14 +297,14 @@ class Connection(object):
             fd, path = tempfile.mkstemp(dir=self.tempdir)
             with os.fdopen(fd, 'w+') as f:
                 f.write(s)
-            self.get_pool().spawn(self.uploadFile, bucket, key, path, headers, 
+            self.get_pool().spawn(self.uploadFile, bucket, key, path, headers,
                 compress, retries, False, True, silent)
             return True
         else:
             size = len(s)
             f = StringIO(s)
             return self._upload(bucket, key, f, size, headers, compress, retries, silent=silent)
-    
+
     def downloadFile(self, bucket, key, retries=3, filename=None):
         path = self._download(bucket, key, retries)
         if not filename:
@@ -317,7 +317,7 @@ class Connection(object):
                 pass
             os.rename(path, filename)
             return filename
-    
+
     def downloadString(self, bucket, key, retries=3):
         fname = self._download(bucket, key, retries)
         if fname:
