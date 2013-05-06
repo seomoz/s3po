@@ -83,6 +83,19 @@ class Connection(object):
         from .batch import Batch
         return Batch(self, poolsize)
 
+    def listNames(self, bucket, prefix='', retries=3):
+        b = self.conn.get_bucket(bucket)
+        for i in range(retries):
+            try:
+                rs = b.list(prefix)
+                return [r.name for r in rs]
+            except Exception as e:
+                if i < retries - 1:
+                    logger.exception('List failed...')
+                    util.backoff(i)
+                else:
+                    raise e
+
     def _download(self, bucket, key, retries=3):
         b = self.conn.get_bucket(bucket)
         # Make a file that we'll write into
