@@ -1,111 +1,106 @@
 s3po
 ====
-Your friendly neighborhood S3 helper
+Your friendly neighborhood S3 helper. It knows just a few tricks, but hopefully
+they'll help you out.
+
+- __Automatic retries__ -- with exponential backoff to make your life easier
+- __Parallel batch operations__ -- using __gevent__ to make it hella fast
+- __Built-in S3 Mocking__ -- to make your testing eaiser
+- __Automatic multipart uploading__ -- and it can retry each piece individually
 
 Installation
 ------------
 This module requires that you have `boto` installed. After that:
 
-    python setup.py install
+```bash
+sudo python setup.py install
+```
 
-Synchronous Use
-===============
-`s3po` can be used __synchronously__ to help you automatically compress or 
-decompress files as they're uploaded or downloaded, or to easily perform
-multi-part uploads, or even just to automatically retry:
+Basic Use
+=========
+`s3po` knows a few tricks, but at its core, you'll use two methods: `upload`
+and `download`:
 
-    import s3po
-    conn = s3po.Connection()
-    # Upload this string setting the Content-Encoding header to `gzip` and 
-    # compressing it with gzip.
-    conn.uploadString('bucket', 'key', ..., compress='gzip')
-    # When downloading, it's also aware that it was compressed with `gzip` and 
-    # will automatically decompress it for you
-    results = conn.downloadString('bucket', 'key')
+```python
+import s3po
+conn = s3po.Connection()
 
-Asynchronous Use
-================
-It can also help you to upload files or strings in the background:
+# Upload with a string
+conn.upload('bucket', 'key', 'howdy')
+# Upload a file
+with open('foo.txt') as fin:
+    conn.upload('bucket', 'key', fin)
 
-    conn.uploadString('bucket', 'key', ..., async=True)
+# Download as a string
+print conn.download('bucket', 'key')
+# Or into a file
+with open('foo.txt', 'w') as fout:
+    conn.download('bucket', 'key', fout)
+```
 
-Alternatively, if you have a batch of uploads or downloads, you can use a batch 
-object (which incidentally works with `with`). It has the same interface as the
-connection object, but it will run everything in a pool of greenlets. Each 
-function you'd call on `conn` returns instead a `gevent` greenlet, which can be
-used to access the normal return value after the fact. So one way to make use of
-this:
+Batch Use
+=========
+The batch object works like a context manager that provide the same interface
+as the connection object. The only difference is that all the requests run in
+a `gevent` pool. When the context is closed, it waits for all functions to
+finish.
 
-    # We've got a lot to download:
-    keys = [...]
-    # Use 30 greenlets
-    results = {}
-    with conn.batch(30) as batch:
-        for key in keys:
-            results[key] = batch.downloadString('bucket', key)
-    
-    # By the time we reach this line, all the downloads have completed
-    for k, greenlet in results.items():
-        print 'Downloaded %s from %s' % (greenlet.value, k)
+```python
+# Upload these in a gevent pool
+keys = ['key.%i' for key in range(1000)]
+with conn.batch(50) as batch:
+    for key in keys:
+        batch.upload('bucket', key, 'hello')
 
-If you'd prefer, you can also provide a callback:
+# And now they're all uploaded
+```
 
-    # Our callback
-    def foo(results):
-        print results
-    
-    with conn.batch(30) as batch:
-        for key in keys:
-            batch.downloadString('bucket', key, callback=foo)
+Callbacks
+---------
+When you want to take some action with the result, all the functions have an
+additional `callback` optional parameter to you can grab the result. This is
+particularly useful when doing bulk downloads:
 
-This is extremely useful with `functools.partial` to help you bind arguments to 
-the callback:
+```python
+from functools import partial
 
-    # Our callback
-    def foo(key, results):
-        print 'Downloaded %s from %s' % (results, key)
-    
-    # We're going to need to bind arguments
-    from functools import partial
-    
-    with conn.batch(30) as batch:
-        for key in keys:
-            # Bind the `key` argument of our callback
-            cb = partial(foo, key=key)
-            batch.downloadString('bucket', key, callback=cb)
+def func(key, value):
+    print 'Downloaded %s from %s' % (key, value)
 
-Other Options and Features
-==========================
+with conn.batch(50) as batch:
+    for key in keys:
+        batch.download('bucket', key, callback=partial(func, key))
+```
 
-Multipart Uploads
------------------
-By default, anything over 10MB is uploaded as multi-part.
+Multipart
+=========
+If the provided data is sufficiently large, it will automatically run the upload
+as a multipart upload rather than a single upload. The advantage here is that
+for any part upload that fails, it will retry just that part.
 
-Deleting Uploaded Files
------------------------
-When performing uploads, you're sometimes interested in deleting the file 
-afterwards. If that's the case, you can provide `delete=True`:
+Mocking
+=======
+You can turn on mocking to get the same functionality of `s3po` that you'd
+expect but without ever having to touch S3. Use it as a context manager:
 
-    # Delete this file once it's done uploading
-    conn.uploadFile('bucket', 'key', '/some/path', async=True, delete=True)
+```python
+# This doesn't touch S3 at all
+with conn.mock():
+    conn.conn.create_bucket('foo')
+    conn.upload('foo', 'bar', 'hello')
+```
 
-Changing Retries
-----------------
-If you want an operation to use more or fewer retries than the default 3, then 
-the `retries` argument is for you:
+If you're writing tests, this is a common pattern:
 
-    # Retry up to 10 times
-    conn.uploadFile('bucket', 'key', '/some/path', async=True, retries=10)
+```python
+class MyTest(unittest.TestCase):
+    def setUp(self):
+        self.s3po = Connectino()
+        self.mock = self.s3po.mock()
+        self.mock.start()
+        self.s3po.conn.create_bucket('bucket')
 
-Headers
--------
-It can be useful to set additional headers to be included as metadata with the 
-key. For example, if you want to describe the content with a MIME type:
+    def tearDown(self):
+        self.mock.stop()
+```
 
-    # Upload a JSON file
-    conn.uploadString('bucket', 'key', ..., headers={
-        'Content-Encoding': 'application/json'
-    })
-
-When you ask for the key to be compressed as it's uploaded, then the
-`Content-Encoding` header is automatically set appropriately.
