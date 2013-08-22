@@ -1,5 +1,7 @@
 '''Test our Connection'''
 
+import os
+import shutil
 import unittest
 from cStringIO import StringIO
 
@@ -9,14 +11,25 @@ from s3po.exceptions import UploadException, DownloadException
 
 class ConnectionTest(unittest.TestCase):
     '''Test our connection's functionality'''
+    tmpdir = 'test/tmp'
+
     def setUp(self):
         self.s3po = Connection()
         self.mock = self.s3po.mock()
         self.mock.start()
         self.s3po.conn.create_bucket('s3po')
+        if not os.path.exists(self.tmpdir):
+            os.mkdir(self.tmpdir)
+        self.assertEqual(os.listdir(self.tmpdir), [])
 
     def tearDown(self):
         self.mock.stop()
+        for path in os.listdir(self.tmpdir):
+            path = os.path.join(self.tmpdir, path)
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            else:
+                os.remove(path)
 
     def test_upload(self):
         '''We should be able to upload a small key'''
@@ -56,3 +69,19 @@ class ConnectionTest(unittest.TestCase):
         obj = StringIO()
         self.s3po.download('s3po', 'foo', obj)
         self.assertEqual(obj.getvalue(), 'hello')
+
+    def test_download_filename(self):
+        '''We should be able to download to a file'''
+        path = os.path.join(self.tmpdir, 'foo')
+        self.s3po.upload('s3po', 'foo', 'hello')
+        self.s3po.download_file('s3po', 'foo', path)
+        with open(path) as fin:
+            self.assertEqual(fin.read(), 'hello')
+
+    def test_upload_filename(self):
+        '''We should be able to upload a file'''
+        path = os.path.join(self.tmpdir, 'foo')
+        with open(path, 'w+') as fout:
+            fout.write('hello')
+        self.s3po.upload_file('s3po', 'foo', path)
+        self.assertEqual(self.s3po.download('s3po', 'foo'), 'hello')

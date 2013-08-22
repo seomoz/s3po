@@ -103,25 +103,29 @@ class Connection(object):
     def uploadFile(self, bucket, key, path, headers=None, compress=None,
         retries=3, async=None, delete=None, silent=False):  # pragma: no cover
         '''Upload the file at path to bucket/key'''
-        warnings.warn('Deprecation: use `upload` instead of `uploadFile`')
+        warnings.warn('Deprecation: use `upload` instead of `uploadFile`',
+            DeprecationWarning)
         with open(os.path.abspath(path)) as fobj:
             return self.upload(bucket, key, fobj, headers, retries)
 
     def uploadString(self, bucket, key, string, headers=None, compress=None,
         retries=3, async=None, silent=False):  # pragma: no cover
         '''Upload the string to bucket/key'''
-        warnings.warn('Deprecation: use `upload` instead of `uploadString`')
+        warnings.warn('Deprecation: use `upload` instead of `uploadString`',
+            DeprecationWarning)
         return self.upload(bucket, key, string, headers, retries)
 
     def downloadFile(self, bucket, key, filename, retries=3): # pragma: no cover
         '''Download bucket/key to the provided filename'''
-        warnings.warn('Deprecation: use `download` instead of `downloadFile`')
+        warnings.warn('Deprecation: use `download` instead of `downloadFile`',
+            DeprecationWarning)
         with open(filename, 'w') as fout:
             return self.download(bucket, key, fout, retries)
 
     def downloadString(self, bucket, key, retries=3): # pragma: no cover
         '''Download bucket/key and return the string'''
-        warnings.warn('Deprecation: use `download` instead of `downloadString`')
+        warnings.warn('Deprecation: use `download` instead of `downloadString`',
+            DeprecationWarning)
         return self.download(bucket, key, retries=retries)
 
     def upload(self, bucket, key, obj_or_data, headers=None, retries=3):
@@ -133,6 +137,13 @@ class Connection(object):
         else:
             return self._upload(bucket, key, obj_or_data, retries, headers)
 
+    def upload_file(self, bucket, key, path, headers=None, retries=3):
+        '''Upload the file at path to bucket/key. This method is important for
+        use in batch mode, so that the file object can be used with the right
+        context management'''
+        with open(os.path.abspath(path)) as fobj:
+            return self.upload(bucket, key, fobj, headers, retries)
+
     def download(self, bucket, key, obj=None, retries=3):
         '''Download to either the object or return a string'''
         if obj:
@@ -140,3 +151,10 @@ class Connection(object):
         obj = StringIO()
         self._download(bucket, key, obj, retries)
         return obj.getvalue()
+
+    def download_file(self, bucket, key, path, retries=3, mode='w'):
+        '''Download the item at bucket/key to a file at path. This method is
+        important for us in batch mode so that the file object can be used with
+        the right context management'''
+        with open(os.path.abspath(path), mode) as fout:
+            return self.download(bucket, key, fout, retries)

@@ -41,3 +41,34 @@ class BatchTest(unittest.TestCase):
                 batch.download(
                     's3po', name, callback=lambda r: results.append(r))
         self.assertEqual(set(results), set(names))
+
+    def test_results(self):
+        '''We can get the results of our batch operations'''
+        names = ['foo', 'bar', 'baz', 'whiz']
+        with self.s3po.batch() as batch:
+            for name in names:
+                batch.upload('s3po', name, name)
+
+        with self.s3po.batch() as batch:
+            for name in names:
+                batch.download('s3po', name)
+        self.assertEqual(set(batch.results()), set(names))
+
+    def test_success(self):
+        '''We can get whether or not all operations returned successfully'''
+        names = ['foo', 'bar', 'baz', 'whiz']
+        with self.s3po.batch() as batch:
+            for name in names:
+                batch.upload('s3po', name, name)
+
+        with self.s3po.batch() as batch:
+            for name in names:
+                batch.download('s3po', name)
+        self.assertTrue(batch.success())
+
+        # We'll change onw of the key's size so that the download fails
+        self.s3po.conn.get_bucket('s3po').get_key('whiz')._size = 10
+        with self.s3po.batch() as batch:
+            for name in names:
+                batch.download('s3po', name, retries=0)
+        self.assertFalse(batch.success())

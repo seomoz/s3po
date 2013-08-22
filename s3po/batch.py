@@ -10,6 +10,7 @@ class Proxy(object):
     def __init__(self, pool, func):
         self.pool = pool
         self.func = func
+        self._greenlet = None
 
     def run(self, *args, **kwargs):
         '''Invoke our function with arguments'''
@@ -19,7 +20,11 @@ class Proxy(object):
         return self.func(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
-        return self.pool.spawn(self.run, *args, **kwargs)
+        self._greenlet = self.pool.spawn(self.run, *args, **kwargs)
+        return self._greenlet
+
+    def __getattr__(self, attr):
+        return getattr(self._greenlet, attr)
 
 
 class Batch(object):
@@ -31,10 +36,13 @@ class Batch(object):
         # Save a copy of connection, and the pool size
         self.conn = connection
         self.pool = Pool(poolsize)
+        self.proxies = []
 
     def __getattr__(self, attr):
         # Return a proxy object that will perform the same action in a pool
-        return Proxy(self.pool, getattr(self.conn, attr))
+        proxy = Proxy(self.pool, getattr(self.conn, attr))
+        self.proxies.append(proxy)
+        return proxy
 
     def __enter__(self):
         return self
@@ -48,3 +56,11 @@ class Batch(object):
     def wait(self):
         '''Wait until all our jobs are done'''
         self.pool.join()
+
+    def success(self):
+        '''Return whether or not everything finished successfully'''
+        return not any(not p.successful() for p in self.proxies)
+
+    def results(self):
+        '''Get the results of each request, in original order'''
+        return list(p.value for p in self.proxies)
