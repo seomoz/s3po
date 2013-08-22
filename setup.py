@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2011 SEOmoz
-# 
+# Copyright (c) 2011, 2013 SEOmoz, Inc
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -9,10 +9,10 @@
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -34,18 +34,15 @@ except ImportError:
 
 setup(
     name             = 's3po',
-    version          = '0.2.0',
+    version          = '0.3.0',
     description      = 'An uploading daemon for S3',
-    long_description = '''Boto is a wonderful library. Sometimes, though, I just 
-        want to describe a file that I want to upload, and then have it uploaded 
-        asynchronously. I don't want to worry about whether or not I should use 
-        a multi-part upload, or worry about having to back off from S3. I should 
-        just be able to enqueue a file to be uploaded and another agent should 
-        take care of the rest.''',
+    long_description = '''Boto is a wonderful library. This is just a little
+        help for dealing with multipart uploads, batch uploading with gevent
+        and getting some help when mocking''',
     author           = 'Dan Lecocq',
-    author_email     = 'dan@seomoz.org',
+    author_email     = 'dan@moz.com',
     url              = 'http://github.com/seomoz/s3po',
-    packages         = ['s3po'],
+    packages         = ['s3po', 's3po.mock'],
     license          = 'MIT',
     platforms        = 'Posix; MacOS X',
     classifiers      = [

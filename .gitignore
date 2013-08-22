@@ -2,4 +2,4 @@ build/*
 dist/*
 *.pyc
 s3po.egg-info/*
-
+.coverage
