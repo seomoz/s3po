@@ -18,22 +18,8 @@ class Connection(object):
     # are that we'll read
     multipart_chunk = 50 * 1024 * 1204
 
-    def __init__(self, tmpdir=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.conn = S3Connection(*args, **kwargs)
-        # Set whether or not this is asynchronous
-        self._tmpdir = tmpdir
-
-    # def __del__(self):
-    #     # If we have a pool going, let's make sure we wait
-    #     if self.pool:
-    #         logger.info('Waiting for uploads and downloads to finish...')
-    #         self.pool.wait()
-
-    # def get_pool(self):
-    #     if self.pool == None:
-    #         from gevent.pool import Pool
-    #         self.pool = Pool(20)
-    #     return self.pool
 
     def batch(self, poolsize=20):
         from .batch import Batch
@@ -66,6 +52,7 @@ class Connection(object):
             if obj.size != fobj.count:
                 raise DownloadException('Downloaded only %i of %i bytes' % (
                     fobj.count, obj.size or 0))
+        # With our wrapped function defined, we'll go ahead an invoke it.
         func()
 
     def _upload(self, bucket, key, fobj, retries, headers=None):

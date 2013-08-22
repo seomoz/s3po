@@ -1,12 +1,6 @@
 '''Various utilities'''
 
-import os
 import time
-import gzip
-import zlib
-import tempfile
-import subprocess
-from decorator import decorator
 
 # Logging
 import logging
@@ -53,7 +47,7 @@ def retry(count,
         '''The actual decorator'''
         def new_func(*args, **kwargs):
             '''The decorated function'''
-            for attempt in xrange(count + 1):
+            for attempt in xrange(count + 1):  # pragma: no branch
                 try:
                     return func(*args, **kwargs)
                 except exceptions:

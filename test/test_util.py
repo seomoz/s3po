@@ -18,3 +18,15 @@ class UtilTest(unittest.TestCase):
         obj = {'count': 0}
         self.assertRaises(ValueError, func, obj)
         self.assertEqual(obj['count'], 10)
+
+    def test_exceptions(self):
+        '''We should be able to limit the exceptions we retry on'''
+        @retry(10, exceptions=(TypeError))
+        def func(obj):
+            '''Raise a ValueError'''
+            obj['count'] += 1
+            raise ValueError('foo')
+
+        obj = {'count': 0}
+        self.assertRaises(ValueError, func, obj)
+        self.assertEqual(obj['count'], 1)
