@@ -4,6 +4,7 @@ import os
 import warnings
 from cStringIO import StringIO
 from boto.s3.connection import S3Connection
+from functools import partial
 
 # Internal imports
 from .mock import Mock
@@ -55,6 +56,14 @@ class Connection(object):
         # With our wrapped function defined, we'll go ahead an invoke it.
         func()
 
+    def _upload_once(self, data, key, headers):
+        '''One attempt at uploading.'''
+        key.set_contents_from_string(data, headers=headers)
+        if key.size != len(data):
+            raise UploadException('Uploaded only %i for %i bytes' % (
+                    key.size, len(data)))
+        return True
+
     def _upload(self, bucket, key, fobj, retries, headers=None):
         '''Upload the contents of fobj to bucket/key with headers'''
         # Make our headers object
@@ -65,18 +74,17 @@ class Connection(object):
         # upload, it needs at least two parts, so we will make sure there are
         # at least enough for two parts before we commit to multipart
         data = fobj.read(2 * self.multipart_chunk)
+
         if len(data) < (2 * self.multipart_chunk):
             key = bucket.new_key(key)
+            # Using a partial function here so we can delete data explicitly.
+            upload_once = partial(_upload_once, data, key, headers)
 
             @retry(retries)
             def func():
-                '''The bit that we want to retry'''
-                key.set_contents_from_string(data, headers=headers)
-                if key.size != len(data):
-                    raise UploadException('Uploaded only %i for %i bytes' % (
-                        key.size, len(data)))
-                return True
-            return func()
+                upload_once
+
+            result = func()
         else:
             logger.info('Multipart')
             # Otherwise, it's a large-enough file that we should multipart
@@ -98,7 +106,9 @@ class Connection(object):
             # And finally, the last part
             multi.upload_part_from_file(StringIO(data), count)
             multi.complete_upload()
-            return True
+            result = True
+        del data
+        return result
 
     def uploadFile(self, bucket, key, path, headers=None, compress=None,
         retries=3, async=None, delete=None, silent=False):  # pragma: no cover
