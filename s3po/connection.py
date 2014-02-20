@@ -48,7 +48,8 @@ class Connection(object):
             fobj.seek(offset)
             obj.get_contents_to_file(fobj)
             # Ensure it was downloaded completely
-            print 'Downloaded %s bytes out of %s' % (fobj.count, obj.size)
+            logger.info(
+                'Downloaded %s bytes out of %s' % (fobj.count, obj.size))
             if obj.size != fobj.count:
                 raise DownloadException('Downloaded only %i of %i bytes' % (
                     fobj.count, obj.size or 0))
