@@ -5,7 +5,7 @@ they'll help you out.
 
 - __Automatic retries__ -- with exponential backoff to make your life easier
 - __Parallel batch operations__ -- using __gevent__ to make it hella fast
-- __Built-in S3 Mocking__ -- to make your testing eaiser
+- __Built-in S3 Mocking__ -- to make your testing easier
 - __Automatic multipart uploading__ -- and it can retry each piece individually
 
 Installation
