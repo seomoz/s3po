@@ -3,3 +3,5 @@ dist/*
 *.pyc
 s3po.egg-info/*
 .coverage
+.idea/*
+*.iml
