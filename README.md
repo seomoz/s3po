@@ -1,5 +1,11 @@
 s3po
 ====
+![Status: Production](https://img.shields.io/badge/status-production-green.svg?style=flat)
+![Team: Big Data](https://img.shields.io/badge/team-big_data-green.svg?style=flat)
+![Scope: External](https://img.shields.io/badge/scope-external-green.svg?style=flat)
+![Open Source: MIT](https://img.shields.io/badge/open_source-MIT-green.svg?style=flat)
+![Critical: Yes](https://img.shields.io/badge/critical-yes-red.svg?style=flat)
+
 Your friendly neighborhood S3 helper. It knows just a few tricks, but hopefully
 they'll help you out.
 
