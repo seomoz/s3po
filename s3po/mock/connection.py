@@ -22,7 +22,7 @@ class S3Connection(object):
             raise S3ResponseError('Bucket %s not empty' % bucket)
         self._buckets.pop(bucket, None)
 
-    def get_bucket(self, bucket):
+    def get_bucket(self, bucket, validate=False):
         '''Get a bucket'''
         obj = self._buckets.get(bucket)
         if not obj:
