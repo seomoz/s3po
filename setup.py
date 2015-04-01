@@ -21,20 +21,11 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-try:
-    from setuptools import setup
-    extra = {
-        'install_requires' : ['boto', 'gevent']
-    }
-except ImportError:
-    from distutils.core import setup
-    extra = {
-        'dependencies' : ['boto', 'gevent']
-    }
+from setuptools import setup
 
 setup(
     name             = 's3po',
-    version          = '0.3.1',
+    version          = '0.3.2',
     description      = 'An uploading daemon for S3',
     long_description = '''Boto is a wonderful library. This is just a little
         help for dealing with multipart uploads, batch uploading with gevent
@@ -45,6 +36,12 @@ setup(
     packages         = ['s3po', 's3po.mock'],
     license          = 'MIT',
     platforms        = 'Posix; MacOS X',
+    install_requires = [
+        'boto',
+        'coverage',
+        'gevent',
+        'nose'
+    ]
     classifiers      = [
         'License :: OSI Approved :: MIT License',
         'Development Status :: 3 - Alpha',

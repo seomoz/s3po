@@ -31,7 +31,7 @@ class Connection(object):
 
     def _download(self, bucket, key, fobj, retries):
         '''Download the contents of bucket/key to fobj'''
-        bucket = self.conn.get_bucket(bucket)
+        bucket = self.conn.get_bucket(bucket, validate=False)
         # Make a file that we'll write into
         fobj = CountFile(fobj)
         obj = bucket.get_key(key)
@@ -60,7 +60,7 @@ class Connection(object):
         '''Upload the contents of fobj to bucket/key with headers'''
         # Make our headers object
         headers = headers or {}
-        bucket = self.conn.get_bucket(bucket)
+        bucket = self.conn.get_bucket(bucket, validate=False)
         # We'll read in some data, and if the file appears small enough, we'll
         # upload it in a single go. In order for it to be a valid multipart
         # upload, it needs at least two parts, so we will make sure there are
