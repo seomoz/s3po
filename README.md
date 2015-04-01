@@ -110,3 +110,16 @@ class MyTest(unittest.TestCase):
         self.mock.stop()
 ```
 
+Development
+===========
+A `Vagrantfile` is provided for development:
+
+```bash
+# On the host OS
+vagrant up
+vagrant ssh
+
+# On the vagrant instance
+cd /vagrant
+make test
+```

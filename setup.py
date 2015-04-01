@@ -21,16 +21,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-try:
-    from setuptools import setup
-    extra = {
-        'install_requires' : ['boto', 'gevent']
-    }
-except ImportError:
-    from distutils.core import setup
-    extra = {
-        'dependencies' : ['boto', 'gevent']
-    }
+from setuptools import setup
 
 setup(
     name             = 's3po',
@@ -45,6 +36,12 @@ setup(
     packages         = ['s3po', 's3po.mock'],
     license          = 'MIT',
     platforms        = 'Posix; MacOS X',
+    install_requires = [
+        'boto',
+        'coverage',
+        'gevent',
+        'nose'
+    ]
     classifiers      = [
         'License :: OSI Approved :: MIT License',
         'Development Status :: 3 - Alpha',
