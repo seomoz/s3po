@@ -41,12 +41,12 @@ setup(
         'coverage',
         'gevent',
         'nose'
-    ]
+    ],
     classifiers      = [
         'License :: OSI Approved :: MIT License',
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
-        'Topic :: Internet :: WWW/HTTP'],
-    **extra
+        'Topic :: Internet :: WWW/HTTP'
+    ]
 )
