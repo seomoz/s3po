@@ -101,34 +101,6 @@ class Connection(object):
             multi.complete_upload()
             return True
 
-    def uploadFile(self, bucket, key, path, headers=None, compress=None,
-        retries=3, async=None, delete=None, silent=False):  # pragma: no cover
-        '''Upload the file at path to bucket/key'''
-        warnings.warn('Deprecation: use `upload` instead of `uploadFile`',
-            DeprecationWarning)
-        with open(os.path.abspath(path)) as fobj:
-            return self.upload(bucket, key, fobj, headers, retries)
-
-    def uploadString(self, bucket, key, string, headers=None, compress=None,
-        retries=3, async=None, silent=False):  # pragma: no cover
-        '''Upload the string to bucket/key'''
-        warnings.warn('Deprecation: use `upload` instead of `uploadString`',
-            DeprecationWarning)
-        return self.upload(bucket, key, string, headers, retries)
-
-    def downloadFile(self, bucket, key, filename, retries=3): # pragma: no cover
-        '''Download bucket/key to the provided filename'''
-        warnings.warn('Deprecation: use `download` instead of `downloadFile`',
-            DeprecationWarning)
-        with open(filename, 'w') as fout:
-            return self.download(bucket, key, fout, retries)
-
-    def downloadString(self, bucket, key, retries=3): # pragma: no cover
-        '''Download bucket/key and return the string'''
-        warnings.warn('Deprecation: use `download` instead of `downloadString`',
-            DeprecationWarning)
-        return self.download(bucket, key, retries=retries)
-
     def upload(self, bucket, key, obj_or_data, headers=None, retries=3):
         '''Upload the provided string or file object to bucket/key'''
         logger.info('Uploading to %s / %s' % (bucket, key))
