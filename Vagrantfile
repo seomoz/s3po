@@ -12,5 +12,5 @@ Vagrant.configure('2') do |config|
     'echo \'Defaults env_keep += "SSH_AUTH_SOCK"\' > /etc/sudoers.d/ssh-auth-sock; ' +
     'chmod 0440 /etc/sudoers.d/ssh-auth-sock'
 
-  config.vm.provision :shell, path: 'provision.sh', privileged: false
+  config.vm.provision :shell, path: 'scripts/vagrant/provision.sh', privileged: false
 end
