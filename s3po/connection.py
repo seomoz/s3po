@@ -7,6 +7,7 @@ from cStringIO import StringIO
 # Internal imports
 from .util import retry, logger
 from .backends.s3 import S3
+from .backends.swift import Swift
 from .backends.memory import Memory
 
 
@@ -14,9 +15,14 @@ class Connection(object):
     '''Our connection to S3'''
 
     @classmethod
-    def s3(cls, *args, **kwargs):
+    def s3(cls, *args, **kwargs):  # pragma: no cover
         '''Create a connection using S3.'''
         return cls(S3(*args, **kwargs))
+
+    @classmethod
+    def swift(cls, *args, **kwargs):  # pragma: no cover
+        '''Create a connection using Swift.'''
+        return cls(Swift(*args, **kwargs))
 
     @classmethod
     def memory(cls):
