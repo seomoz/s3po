@@ -9,7 +9,7 @@ class Memory(object):
     def __init__(self):
         self.buckets = {}
 
-    def download(self, bucket, key, fobj, retries):
+    def download(self, bucket, key, fobj, retries, headers=None):
         '''Download the contents of bucket/key to fobj'''
         obj = self.buckets.get(bucket, {}).get(key)
         if not obj:

@@ -48,7 +48,7 @@ class Connection(object):
 
     def upload(self, bucket, key, obj_or_data, headers=None, retries=3):
         '''Upload the provided string or file object to bucket/key'''
-        logger.info('Uploading to %s / %s' % (bucket, key))
+        logger.info('Uploading to %s / %s', bucket, key)
         if isinstance(obj_or_data, basestring):
             return self.backend.upload(
                 bucket, key, StringIO(obj_or_data), retries, headers)
@@ -62,12 +62,13 @@ class Connection(object):
         with open(os.path.abspath(path)) as fobj:
             return self.upload(bucket, key, fobj, headers, retries)
 
-    def download(self, bucket, key, obj=None, retries=3):
+    def download(self, bucket, key, obj=None, headers=None, retries=3):
         '''Download to either the object or return a string'''
+        logger.info('Downloading %s / %s', bucket, key)
         if obj:
-            return self.backend.download(bucket, key, obj, retries)
+            return self.backend.download(bucket, key, obj, retries, headers)
         obj = StringIO()
-        self.backend.download(bucket, key, obj, retries)
+        self.backend.download(bucket, key, obj, retries, headers)
         return obj.getvalue()
 
     def download_file(self, bucket, key, path, retries=3, mode='w'):

@@ -17,7 +17,7 @@ class Swift(object):
         kwargs['retries'] = 0
         self.conn = swiftclient.client.Connection(*args, **kwargs)
 
-    def download(self, bucket, key, fobj, retries):
+    def download(self, bucket, key, fobj, retries, headers=None):
         '''Download the contents of bucket/key to fobj'''
         # Make a file that we'll write into
         fobj = CountFile(fobj)
@@ -29,17 +29,17 @@ class Swift(object):
         def func():
             '''The bit that we want to retry'''
             try:
-                headers, response = self.conn.get_object(
-                    bucket, key, resp_chunk_size=self.chunk_size)
+                resp_headers, response = self.conn.get_object(
+                    bucket, key, resp_chunk_size=self.chunk_size, headers=headers)
 
                 fobj.seek(offset)
                 for chunk in response:
                     print 'Writing %s' % chunk
                     fobj.write(chunk)
 
-                length = headers.get('content-length')
+                length = resp_headers.get('content-length')
                 if not length:
-                    logger.warn('No conent-length provided -- cannot detect truncation.')
+                    logger.warn('No content-length provided -- cannot detect truncation.')
                 elif fobj.count != int(length):
                     raise DownloadException('Downloaded only %i of %i bytes' % (
                         fobj.count, length))

@@ -15,7 +15,7 @@ class S3BackendTest(BaseTest):
     def setUp(self):
         BaseTest.setUp(self)
         self.bucket = Bucket('bucket')
-        self.backend = S3()
+        self.backend = S3(aws_access_key_id='not', aws_secret_access_key='a real key')
         mock.patch.object(self.backend, 'get_bucket', return_value=self.bucket).start()
 
     def test_round_trip(self):
@@ -90,7 +90,7 @@ class Key(object):
         self.data = data
         self.header = headers or dict()
 
-    def get_contents_to_file(self, fobj):
+    def get_contents_to_file(self, fobj, headers=None):
         fobj.write(self.data)
 
 

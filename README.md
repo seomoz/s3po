@@ -6,21 +6,41 @@ s3po
 ![Open Source: MIT](https://img.shields.io/badge/open_source-MIT-green.svg?style=flat)
 ![Critical: Yes](https://img.shields.io/badge/critical-yes-red.svg?style=flat)
 
-Your friendly neighborhood S3 helper. It knows just a few tricks, but hopefully
-they'll help you out.
+Your friendly neighborhood S3 _and Swift_ helper. It knows just a few tricks, but
+hopefully they'll help you out.
 
 - __Automatic retries__ -- with exponential backoff to make your life easier
 - __Parallel batch operations__ -- using __gevent__ to make it hella fast
-- __Built-in S3 Mocking__ -- to make your testing easier
+- __Built-in Mocking__ -- to make your testing easier
 - __Automatic multipart uploading__ -- and it can retry each piece individually
+- Support for `swift` and `s3`
 
 Installation
 ------------
-This module requires that you have `boto` installed. After that:
 
 ```bash
-sudo python setup.py install
+pip install -r requirements.txt
+python setup.py install
 ```
+
+Backend
+-------
+Select a backend explicitly when creating a connection:
+
+```python
+import s3po
+
+# Provide arguments that would normally be provided to `python-swiftclient`, like:
+#
+#   `authurl`, `user`, `key`
+#
+conn = s3po.Connection.Swift(...)
+
+# Provide arguments that would normally be provided to `boto`, like:
+#
+#   `aws_access_key_id`, `aws_secret_access_key`, etc.
+#
+conn = s3po.Connection.S3(...)
 
 Basic Use
 =========
@@ -29,7 +49,7 @@ and `download`:
 
 ```python
 import s3po
-conn = s3po.Connection()
+conn = s3po.Connection.S3()
 
 # Upload with a string
 conn.upload('bucket', 'key', 'howdy')
@@ -90,9 +110,8 @@ You can turn on mocking to get the same functionality of `s3po` that you'd
 expect but without ever having to touch S3. Use it as a context manager:
 
 ```python
-# This doesn't touch S3 at all
+# This doesn't touch S3 or Swift at all
 with conn.mock():
-    conn.conn.create_bucket('foo')
     conn.upload('foo', 'bar', 'hello')
 ```
 
@@ -101,10 +120,9 @@ If you're writing tests, this is a common pattern:
 ```python
 class MyTest(unittest.TestCase):
     def setUp(self):
-        self.s3po = Connectino()
+        self.s3po = ... # some existing s3po object in the library we're testing
         self.mock = self.s3po.mock()
         self.mock.start()
-        self.s3po.conn.create_bucket('bucket')
 
     def tearDown(self):
         self.mock.stop()

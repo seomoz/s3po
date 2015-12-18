@@ -11,7 +11,7 @@ from s3po.exceptions import UploadException, DownloadException
 
 
 class SwiftBackendTest(BaseTest):
-    '''We can talk to S3 as expected.'''
+    '''We can talk to Swift as expected.'''
 
     def setUp(self):
         BaseTest.setUp(self)
