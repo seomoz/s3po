@@ -33,7 +33,7 @@ setup(
     author           = 'Dan Lecocq',
     author_email     = 'dan@moz.com',
     url              = 'http://github.com/seomoz/s3po',
-    packages         = ['s3po', 's3po.mock'],
+    packages         = ['s3po', 's3po.backends'],
     license          = 'MIT',
     platforms        = 'Posix; MacOS X',
     install_requires = [
