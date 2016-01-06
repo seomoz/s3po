@@ -56,6 +56,21 @@ class S3BackendTest(BaseTest):
         self.backend.download('bucket', 'key', result, 1)
         self.assertEqual(result.getvalue(), data)
 
+    def test_list(self):
+        '''Can list a bucket'''
+        self.bucket.new_key('key')
+        with mock.patch.object(self.backend.conn, 'get_bucket', return_value=self.bucket):
+            self.assertEqual(self.backend.list('bucket'),
+                             ['key'])
+
+    def test_list_prefix(self):
+        '''Can list a bucket limited by prefix'''
+        self.bucket.new_key('key')
+        self.bucket.new_key('starts_with_something_else')
+        with mock.patch.object(self.backend.conn, 'get_bucket', return_value=self.bucket):
+            self.assertEqual(self.backend.list('bucket', prefix='k'),
+                             ['key'])
+
 
 class Bucket(object):
     '''A mock bucket.'''
@@ -71,6 +86,9 @@ class Bucket(object):
         if key not in self.keys:
             self.keys[key] = Key()
         return self.keys[key]
+
+    def list(self, prefix, delimiter, headers=None):
+        return [key for key in self.keys if key.startswith(prefix)]
 
     def initiate_multipart_upload(self, key, headers=None):
         return Multi(self, key, headers)

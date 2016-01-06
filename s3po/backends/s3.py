@@ -93,3 +93,13 @@ class S3(object):
             multi.upload_part_from_file(StringIO(data), count)
             multi.complete_upload()
             return True
+
+    def list(self, bucket, prefix=None, delimiter=None, headers=None):
+        '''List the bucket, possibly limiting the search with a prefix.'''
+        bucket = self.conn.get_bucket(bucket)
+        if prefix is None:
+            prefix = ''
+        if delimiter is None:
+            delimiteer = ''
+        # Consumer iterator to make a list to keep parity with Swift backend
+        return list(bucket.list(prefix, delimiter, headers=headers))

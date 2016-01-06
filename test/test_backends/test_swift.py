@@ -60,3 +60,8 @@ class SwiftBackendTest(BaseTest):
         self.conn.put_object.side_effect = ClientException('Failed to upload')
         self.assertRaises(UploadException,
             self.backend.upload, 'bucket', 'key', StringIO('content'), 1)
+
+    def test_list(self):
+        self.conn.get_container.return_value = (None, ['key'])
+        self.assertEqual(self.backend.list('bucket'),
+                         ['key'])
