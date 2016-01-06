@@ -100,6 +100,6 @@ class S3(object):
         if prefix is None:
             prefix = ''
         if delimiter is None:
-            delimiteer = ''
+            delimiter = ''
         # Consumer iterator to make a list to keep parity with Swift backend
         return list(bucket.list(prefix, delimiter, headers=headers))
