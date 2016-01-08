@@ -28,8 +28,8 @@ class Memory(object):
         '''List the contents of a bucket.'''
         if prefix is None:
             prefix = ''
-        keys = [key for key in self.buckets[bucket].keys() if key.startswith(prefix)]
+        keys = (key for key in self.buckets[bucket].keys() if key.startswith(prefix))
         if delimiter:
-            return list(set(key.split(delimiter, 1)[0] for key in keys))
+            return (prefix for prefix in set(key.split(delimiter, 1)[0] for key in keys))
         else:
             return keys

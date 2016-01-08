@@ -62,7 +62,7 @@ class S3BackendTest(BaseTest):
         '''Can list a bucket'''
         self.bucket.new_key('key')
         with mock.patch.object(self.backend.conn, 'get_bucket', return_value=self.bucket):
-            self.assertEqual(self.backend.list('bucket'),
+            self.assertEqual(list(self.backend.list('bucket')),
                              ['key'])
 
     def test_list_prefix(self):
@@ -70,7 +70,7 @@ class S3BackendTest(BaseTest):
         self.bucket.new_key('key')
         self.bucket.new_key('starts_with_something_else')
         with mock.patch.object(self.backend.conn, 'get_bucket', return_value=self.bucket):
-            self.assertEqual(self.backend.list('bucket', prefix='k'),
+            self.assertEqual(list(self.backend.list('bucket', prefix='k')),
                              ['key'])
 
 

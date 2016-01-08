@@ -63,5 +63,5 @@ class SwiftBackendTest(BaseTest):
 
     def test_list(self):
         self.conn.get_container.return_value = (None, [{'name':'key'}])
-        self.assertEqual(self.backend.list('bucket'),
+        self.assertEqual(list(self.backend.list('bucket')),
                          ['key'])

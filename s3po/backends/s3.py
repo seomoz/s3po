@@ -98,5 +98,4 @@ class S3(object):
         '''List the bucket, possibly limiting the search with a prefix.'''
         bucket = self.conn.get_bucket(bucket)
         # consume iterator to make a list to keep parity with Swift backend
-        results = list(bucket.list(prefix, delimiter, headers=headers))
-        return [result.name for result in results]
+        return (key.name for key in bucket.list(prefix, delimiter, headers=headers))

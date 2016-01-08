@@ -70,4 +70,5 @@ class Swift(object):
         results =  self.conn.get_container(bucket, 
                                            prefix=prefix, 
                                            delimiter=delimiter)[1]
-        return [result['name'] for result in results]
+        # returns a generator like other backends
+        return (result['name'] for result in results)
