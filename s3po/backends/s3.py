@@ -97,9 +97,6 @@ class S3(object):
     def list(self, bucket, prefix=None, delimiter=None, headers=None):
         '''List the bucket, possibly limiting the search with a prefix.'''
         bucket = self.conn.get_bucket(bucket)
-        if prefix is None:
-            prefix = ''
-        if delimiter is None:
-            delimiter = ''
-        # Consumer iterator to make a list to keep parity with Swift backend
-        return list(bucket.list(prefix, delimiter, headers=headers))
+        # consume iterator to make a list to keep parity with Swift backend
+        results = list(bucket.list(prefix, delimiter, headers=headers))
+        return [result.name for result in results]

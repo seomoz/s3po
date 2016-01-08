@@ -67,11 +67,7 @@ class Swift(object):
 
     def list(self, bucket, prefix=None, delimiter=None, headers=None):
         '''List the bucket, possibly limiting the search with a prefix.'''
-        if prefix is None:
-            prefix = ''
-        if delimiter is None:
-            delimiter = ''
-        # Consumer iterator to make a list to keep parity with Swift backend
-        return self.conn.get_container(bucket, 
-                                       prefix=prefix, 
-                                       delimiter=delimiter)[1]
+        results =  self.conn.get_container(bucket, 
+                                           prefix=prefix, 
+                                           delimiter=delimiter)[1]
+        return [result['name'] for result in results]

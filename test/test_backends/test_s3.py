@@ -3,6 +3,8 @@
 from cStringIO import StringIO
 
 import mock
+from collections import namedtuple
+
 from base import BaseTest
 
 from s3po.backends.s3 import S3
@@ -88,7 +90,9 @@ class Bucket(object):
         return self.keys[key]
 
     def list(self, prefix, delimiter, headers=None):
-        return [key for key in self.keys if key.startswith(prefix)]
+        prefix = prefix or ''
+        Key = namedtuple('Key', ['name'])
+        return [Key(key) for key in self.keys if key.startswith(prefix)]
 
     def initiate_multipart_upload(self, key, headers=None):
         return Multi(self, key, headers)
