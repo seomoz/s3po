@@ -65,10 +65,18 @@ class Swift(object):
 
         func()
 
-    def list(self, bucket, prefix=None, delimiter=None, headers=None,
-                   chunksize=100):
+    def _get_container_retry(self, retries, *args, **kwargs):
+        '''Wrap Swift's get_container with retries.'''
+        @retry(retries)
+        def func():
+            return self.conn.get_container(*args, **kwargs)
+        return func()
+
+    def list(self, bucket, prefix=None, delimiter=None, retries=3,
+                   headers=None, chunksize=100):
         '''List the bucket, possibly limiting the search with a prefix.'''
-        listing =  self.conn.get_container(bucket,
+        listing =  self._get_container_retry(retries,
+                                           bucket,
                                            prefix=prefix,
                                            delimiter=delimiter,
                                            limit=chunksize)[1]
