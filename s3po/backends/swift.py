@@ -65,10 +65,20 @@ class Swift(object):
 
         func()
 
-    def list(self, bucket, prefix=None, delimiter=None, headers=None):
+    def list(self, bucket, prefix=None, delimiter=None, headers=None,
+                   chunksize=100):
         '''List the bucket, possibly limiting the search with a prefix.'''
-        results =  self.conn.get_container(bucket, 
-                                           prefix=prefix, 
-                                           delimiter=delimiter)[1]
-        # returns a generator like other backends
-        return (result['name'] for result in results)
+        listing =  self.conn.get_container(bucket,
+                                           prefix=prefix,
+                                           delimiter=delimiter,
+                                           limit=chunksize)[1]
+        while listing:
+            for result in listing:
+                yield result['name']
+            # out of results in current listing, get more starting at the end
+            marker = listing[-1]['name']
+            listing = self.conn.get_container(bucket,
+                                              prefix=prefix,
+                                              delimiter=delimiter,
+                                              marker=marker,
+                                              limit=chunksize)[1]
