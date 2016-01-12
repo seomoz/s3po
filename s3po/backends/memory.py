@@ -24,7 +24,7 @@ class Memory(object):
 
         self.buckets[bucket][key] = fobj.read()
 
-    def list(self, bucket, prefix, delimiter, headers=None):
+    def list(self, bucket, prefix=None, delimiter=None, headers=None):
         '''List the contents of a bucket.'''
         if prefix is None:
             prefix = ''
