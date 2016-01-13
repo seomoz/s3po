@@ -58,3 +58,21 @@ class ConnectionTest(BaseTest):
             pass
 
         self.assertEqual(original, self.conn.backend)
+
+    def test_list(self):
+        self.conn.upload('bucket', 'key', StringIO('content'))
+        self.assertEqual(list(self.conn.list('bucket')), 
+                         ['key'])
+
+    def test_list_prefix(self):
+        self.conn.upload('bucket', 'key', StringIO('content'))
+        self.conn.upload('bucket', 'something_else', StringIO('content'))
+        self.assertEqual(list(self.conn.list('bucket', prefix='k')), 
+                         ['key'])
+
+    def test_list_delimiter(self):
+        self.conn.upload('bucket', 'a.1', StringIO('content'))
+        self.conn.upload('bucket', 'a.2', StringIO('content'))
+        self.assertEqual(list(self.conn.list('bucket', delimiter='.')), 
+                         ['a'])
+

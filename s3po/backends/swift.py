@@ -64,3 +64,29 @@ class Swift(object):
                 raise UploadException('Failed to upload %s' % key)
 
         func()
+
+    def _get_container_retry(self, retries, *args, **kwargs):
+        '''Wrap Swift's get_container with retries.'''
+        @retry(retries)
+        def func():
+            return self.conn.get_container(*args, **kwargs)
+        return func()
+
+    def list(self, bucket, prefix=None, delimiter=None, retries=3,
+                   headers=None, chunksize=100):
+        '''List the bucket, possibly limiting the search with a prefix.'''
+        listing =  self._get_container_retry(retries,
+                                           bucket,
+                                           prefix=prefix,
+                                           delimiter=delimiter,
+                                           limit=chunksize)[1]
+        while listing:
+            for result in listing:
+                yield result['name']
+            # out of results in current listing, get more starting at the end
+            marker = listing[-1]['name']
+            listing = self.conn.get_container(bucket,
+                                              prefix=prefix,
+                                              delimiter=delimiter,
+                                              marker=marker,
+                                              limit=chunksize)[1]

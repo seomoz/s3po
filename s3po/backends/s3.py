@@ -93,3 +93,16 @@ class S3(object):
             multi.upload_part_from_file(StringIO(data), count)
             multi.complete_upload()
             return True
+
+    def _list_retry(self, retries, bucket, *args, **kwargs):
+        @retry(retries)
+        def func():
+            return bucket.list(*args, **kwargs)
+        return func()
+
+    def list(self, bucket, prefix=None, delimiter=None, retries=3, headers=None):
+        '''List the bucket, possibly limiting the search with a prefix.'''
+        bucket = self.conn.get_bucket(bucket)
+        # consume iterator to make a list to keep parity with Swift backend
+        return (key.name for key in self._list_retry(retries, bucket,
+                                          prefix, delimiter, headers=headers))

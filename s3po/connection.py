@@ -77,3 +77,7 @@ class Connection(object):
         the right context management'''
         with open(os.path.abspath(path), mode) as fout:
             return self.download(bucket, key, fout, retries)
+
+    def list(self, bucket, prefix=None, delimiter=None, retries=3, headers=None):
+        '''List the contents of the bucket, optionally specifying a prefix.'''
+        return self.backend.list(bucket, prefix, delimiter, retries, headers)
