@@ -25,7 +25,7 @@ from setuptools import setup
 
 setup(
     name             = 's3po',
-    version          = '0.4.1',
+    version          = '0.4.2',
     description      = 'An uploading daemon for S3',
     long_description = '''Boto is a wonderful library. This is just a little
         help for dealing with multipart uploads, batch uploading with gevent
@@ -40,7 +40,9 @@ setup(
         'boto',
         'coverage',
         'gevent',
-        'nose'
+        'mock',
+        'nose',
+        'python_swiftclient'
     ],
     classifiers      = [
         'License :: OSI Approved :: MIT License',
