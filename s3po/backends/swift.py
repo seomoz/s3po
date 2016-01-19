@@ -34,7 +34,6 @@ class Swift(object):
 
                 fobj.seek(offset)
                 for chunk in response:
-                    print 'Writing %s' % chunk
                     fobj.write(chunk)
 
                 length = resp_headers.get('content-length')
