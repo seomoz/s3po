@@ -76,7 +76,7 @@ class Connection(object):
         important for us in batch mode so that the file object can be used with
         the right context management'''
         with open(os.path.abspath(path), mode) as fout:
-            return self.download(bucket, key, fout, retries)
+            return self.download(bucket, key, fout, retries=retries)
 
     def list(self, bucket, prefix=None, delimiter=None, retries=3, headers=None):
         '''List the contents of the bucket, optionally specifying a prefix.'''
