@@ -22,7 +22,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from setuptools import setup
-from s3po import __version__
+from s3po.version import __version__
 
 setup(
     name             = 's3po',
