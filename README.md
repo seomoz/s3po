@@ -34,13 +34,14 @@ import s3po
 #
 #   `authurl`, `user`, `key`
 #
-conn = s3po.Connection.Swift(...)
+conn = s3po.Connection.swift(...)
 
 # Provide arguments that would normally be provided to `boto`, like:
 #
 #   `aws_access_key_id`, `aws_secret_access_key`, etc.
 #
-conn = s3po.Connection.S3(...)
+conn = s3po.Connection.s3(...)
+```
 
 Basic Use
 =========
@@ -49,7 +50,7 @@ and `download`:
 
 ```python
 import s3po
-conn = s3po.Connection.S3()
+conn = s3po.Connection.s3()
 
 # Upload with a string
 conn.upload('bucket', 'key', 'howdy')
