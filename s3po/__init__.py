@@ -25,3 +25,5 @@
 # Make our Connection visible at the top level
 from .connection import Connection
 from .util import logger
+
+__version__ = '0.4.3'
