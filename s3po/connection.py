@@ -71,12 +71,12 @@ class Connection(object):
         self.backend.download(bucket, key, obj, retries, headers)
         return obj.getvalue()
 
-    def download_file(self, bucket, key, path, retries=3, mode='w'):
+    def download_file(self, bucket, key, path, headers=None, retries=3, mode='w'):
         '''Download the item at bucket/key to a file at path. This method is
         important for us in batch mode so that the file object can be used with
         the right context management'''
         with open(os.path.abspath(path), mode) as fout:
-            return self.download(bucket, key, fout, retries)
+            return self.download(bucket, key, fout, headers, retries)
 
     def list(self, bucket, prefix=None, delimiter=None, retries=3, headers=None):
         '''List the contents of the bucket, optionally specifying a prefix.'''
