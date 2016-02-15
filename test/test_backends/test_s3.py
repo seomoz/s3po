@@ -1,6 +1,7 @@
 '''Talk to S3'''
 
 from cStringIO import StringIO
+from boto.exception import S3ResponseError
 
 import mock
 from collections import namedtuple
@@ -29,8 +30,11 @@ class S3BackendTest(BaseTest):
 
     def test_download_missing(self):
         '''Downloading a missing object gives us failure.'''
-        self.assertRaises(
-            DownloadException, self.backend.download, 'bucket', 'key', StringIO(), 1)
+        key = self.bucket.get_key('key')
+        exception = S3ResponseError(404, 'Not Found')
+        with mock.patch.object(key, 'get_contents_to_file', side_effect=exception):
+            self.assertRaises(
+                DownloadException, self.backend.download, 'bucket', 'key', StringIO(), 1)
 
     def test_download_size_mismatch(self):
         '''If we've downloaded less than expected, throws an exception.'''
@@ -81,8 +85,8 @@ class Bucket(object):
         self.name = name
         self.keys = {}
 
-    def get_key(self, key):
-        return self.keys.get(key)
+    def get_key(self, key, validate=True):
+        return self.keys.get(key) or self.new_key(key)
 
     def new_key(self, key):
         if key not in self.keys:
