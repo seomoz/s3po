@@ -2,6 +2,7 @@
 
 
 from boto.s3.connection import S3Connection
+from boto.exception import S3ResponseError
 from cStringIO import StringIO
 
 from ..util import CountFile, retry, logger
@@ -26,10 +27,7 @@ class S3(object):
         bucket = self.get_bucket(bucket)
         # Make a file that we'll write into
         destination = CountFile(destination)
-        obj = bucket.get_key(key)
-        if not obj:
-            raise DownloadException('Key %s does not exist in %s' % (
-                key, bucket.name))
+        obj = bucket.get_key(key, validate=False)
 
         # Get its original location so we can go back to it if need be
         offset = destination.tell()
@@ -38,7 +36,10 @@ class S3(object):
         def func():
             '''The bit that we want to retry'''
             destination.seek(offset)
-            obj.get_contents_to_file(destination, headers=headers)
+            try:
+                obj.get_contents_to_file(destination, headers=headers)
+            except S3ResponseError as exc:
+                raise DownloadException('Failed to download: %s' % exc.message)
             # Ensure it was downloaded completely
             logger.info(
                 'Downloaded %s bytes out of %s' % (destination.count, obj.size))
