@@ -41,7 +41,7 @@ class Swift(object):
                     logger.warn('No content-length provided -- cannot detect truncation.')
                 elif fobj.count != int(length):
                     raise DownloadException('Downloaded only %i of %i bytes' % (
-                        fobj.count, length))
+                        fobj.count, int(length)))
 
             except ClientException:
                 raise DownloadException('Key not found.')
