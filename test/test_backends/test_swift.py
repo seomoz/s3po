@@ -22,8 +22,10 @@ class SwiftBackendTest(BaseTest):
     def test_download_missing(self):
         '''Downloading a missing object gives us failure.'''
         self.conn.get_object.side_effect = ClientException('Missing')
-        self.assertRaises(
-            DownloadException, self.backend.download, 'bucket', 'key', StringIO(), 1)
+        with self.assertRaises(DownloadException) as manager:
+            self.backend.download('bucket', 'key', StringIO(), 1)
+        the_exception = manager.exception
+        self.assertIn('Missing', str(the_exception))
 
     def test_download_success(self):
         '''Can successfully download an object.'''

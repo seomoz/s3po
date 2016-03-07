@@ -43,8 +43,8 @@ class Swift(object):
                     raise DownloadException('Downloaded only %i of %i bytes' % (
                         fobj.count, int(length)))
 
-            except ClientException:
-                raise DownloadException('Key not found.')
+            except ClientException as exc:
+                raise DownloadException('Key not found: ' + str(exc))
 
         # Invoke the download
         func()
