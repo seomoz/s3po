@@ -13,7 +13,7 @@ class Memory(object):
         '''Download the contents of bucket/key to fobj'''
         obj = self.buckets.get(bucket, {}).get(key)
         if not obj:
-            raise DownloadException('%s / %s not fount' % (bucket, key))
+            raise DownloadException('%s / %s not found' % (bucket, key))
         else:
             fobj.write(obj)
 
