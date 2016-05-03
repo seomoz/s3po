@@ -84,7 +84,8 @@ class Swift(object):
                 yield result['name']
             # out of results in current listing, get more starting at the end
             marker = listing[-1]['name']
-            listing = self.conn.get_container(bucket,
+            listing = self._get_container_retry(retries,
+                                              bucket,
                                               prefix=prefix,
                                               delimiter=delimiter,
                                               marker=marker,
