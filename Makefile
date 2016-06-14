@@ -1,7 +1,7 @@
 .PHONY: test
 test:
 	rm -f .coverage
-	nosetests --exe --cover-package=s3po --with-coverage --cover-branches --logging-clear-handlers -v 
+	nosetests --rednose --exe --cover-package=s3po --with-coverage --cover-branches --logging-clear-handlers -v
 
 clean:
 	# Remove the build
