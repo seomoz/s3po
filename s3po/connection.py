@@ -81,3 +81,8 @@ class Connection(object):
     def list(self, bucket, prefix=None, delimiter=None, retries=3, headers=None):
         '''List the contents of the bucket, optionally specifying a prefix.'''
         return self.backend.list(bucket, prefix, delimiter, retries, headers)
+
+    def delete(self, bucket, key, headers=None, retries=3):
+        '''Delete the bucket/key'''
+        logger.info('Deleting %s / %s', bucket, key)
+        return self.backend.delete(bucket, key, retries, headers)

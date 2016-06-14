@@ -3,7 +3,7 @@
 from base import BaseTest
 from cStringIO import StringIO
 
-from s3po.exceptions import DownloadException
+from s3po.exceptions import DownloadException, DeleteException
 
 
 class ConnectionTest(BaseTest):
@@ -61,18 +61,28 @@ class ConnectionTest(BaseTest):
 
     def test_list(self):
         self.conn.upload('bucket', 'key', StringIO('content'))
-        self.assertEqual(list(self.conn.list('bucket')), 
+        self.assertEqual(list(self.conn.list('bucket')),
                          ['key'])
 
     def test_list_prefix(self):
         self.conn.upload('bucket', 'key', StringIO('content'))
         self.conn.upload('bucket', 'something_else', StringIO('content'))
-        self.assertEqual(list(self.conn.list('bucket', prefix='k')), 
+        self.assertEqual(list(self.conn.list('bucket', prefix='k')),
                          ['key'])
 
     def test_list_delimiter(self):
         self.conn.upload('bucket', 'a.1', StringIO('content'))
         self.conn.upload('bucket', 'a.2', StringIO('content'))
-        self.assertEqual(list(self.conn.list('bucket', delimiter='.')), 
+        self.assertEqual(list(self.conn.list('bucket', delimiter='.')),
                          ['a'])
 
+    def test_delete_file(self):
+        '''Can delete.'''
+        self.conn.upload('bucket', 'key', 'content')
+        self.conn.delete('bucket', 'key')
+        self.assertEqual(list(self.conn.list('bucket', prefix='k')), [])
+
+    def test_delete_unexisting_key(self):
+        '''Delete raises when key not found.'''
+        with self.assertRaises(DeleteException):
+            self.conn.delete('bucket', 'key')

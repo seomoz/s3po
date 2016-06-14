@@ -1,7 +1,8 @@
 '''An in-memory backend'''
 
-from ..exceptions import DownloadException
 import collections
+
+from ..exceptions import DownloadException, DeleteException
 
 
 class Memory(object):
@@ -31,3 +32,10 @@ class Memory(object):
             return (prefix for prefix in set(key.split(delimiter, 1)[0] for key in keys))
         else:
             return keys
+
+    def delete(self, bucket, key, retries, headers=None):
+        '''Delete bucket/key with headers'''
+        if key in self.buckets[bucket]:
+            del self.buckets[bucket][key]
+        else:
+            raise DeleteException('Failed to delete %s/%s' % (bucket, key))

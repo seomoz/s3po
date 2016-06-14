@@ -4,7 +4,7 @@ import swiftclient.client
 from swiftclient.exceptions import ClientException
 
 from ..util import CountFile, retry, logger
-from ..exceptions import UploadException, DownloadException
+from ..exceptions import UploadException, DownloadException, DeleteException
 
 
 class Swift(object):
@@ -90,3 +90,17 @@ class Swift(object):
                                               delimiter=delimiter,
                                               marker=marker,
                                               limit=chunksize)[1]
+
+    def delete(self, bucket, key, retries, headers=None):
+        '''Delete bucket/key with headers'''
+        # Make our headers object
+        headers = headers or {}
+
+        @retry(retries)
+        def func():
+            try:
+                self.conn.delete_object(bucket, key, headers=headers)
+            except ClientException:
+                raise DeleteException('Failed to delete %s/%s' % (bucket, key))
+
+        func()

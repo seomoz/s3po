@@ -2,11 +2,11 @@
 
 
 from boto.s3.connection import S3Connection
-from boto.exception import S3ResponseError
+from boto.exception import S3ResponseError, BotoServerError, BotoClientError
 from cStringIO import StringIO
 
 from ..util import CountFile, retry, logger
-from ..exceptions import UploadException, DownloadException
+from ..exceptions import UploadException, DownloadException, DeleteException
 
 
 class S3(object):
@@ -107,3 +107,21 @@ class S3(object):
         # consume iterator to make a list to keep parity with Swift backend
         return (key.name for key in self._list_retry(retries, bucket,
                                           prefix, delimiter, headers=headers))
+
+    def delete(self, bucket, key, retries, headers=None):
+        '''Delete bucket/key with headers'''
+        # Make our headers object
+        headers = headers or {}
+        bucket = self.get_bucket(bucket)
+        key = bucket.new_key(key)
+
+        @retry(retries)
+        def func():
+            '''The bit that we want to retry'''
+            try:
+                key.delete(headers=headers)
+            except (BotoServerError, BotoClientError) as exc:
+                raise DeleteException('Failed to delete %s/%s: %s(%s)' %
+                    (bucket, key, exc.__class__.__name__, exc.message))
+
+        return func()
