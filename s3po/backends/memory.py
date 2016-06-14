@@ -1,17 +1,18 @@
 '''An in-memory backend'''
 
 from ..exceptions import DownloadException
+import collections
 
 
 class Memory(object):
     '''An in-memory backend'''
 
     def __init__(self):
-        self.buckets = {}
+        self.buckets = collections.defaultdict(dict)
 
     def download(self, bucket, key, fobj, retries, headers=None):
         '''Download the contents of bucket/key to fobj'''
-        obj = self.buckets.get(bucket, {}).get(key)
+        obj = self.buckets[bucket].get(key)
         if not obj:
             raise DownloadException('%s / %s not found' % (bucket, key))
         else:
@@ -19,9 +20,6 @@ class Memory(object):
 
     def upload(self, bucket, key, fobj, retries, headers=None):
         '''Upload the contents of fobj to bucket/key with headers'''
-        if bucket not in self.buckets:
-            self.buckets[bucket] = {}
-
         self.buckets[bucket][key] = fobj.read()
 
     def list(self, bucket, prefix=None, delimiter=None, retries=None, headers=None):
