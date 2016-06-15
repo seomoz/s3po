@@ -9,7 +9,7 @@ from collections import namedtuple
 from base import BaseTest
 
 from s3po.backends.s3 import S3
-from s3po.exceptions import UploadException, DownloadException
+from s3po.exceptions import UploadException, DownloadException, DeleteException
 
 
 class S3BackendTest(BaseTest):
@@ -78,6 +78,24 @@ class S3BackendTest(BaseTest):
                              ['key'])
 
 
+    def test_delete(self):
+        '''Can delete a key'''
+        self.bucket.new_key('key')
+        with mock.patch.object(self.backend.conn, 'get_bucket', return_value=self.bucket):
+            self.backend.delete('bucket', 'key', 1)
+            self.assertEqual(list(self.backend.list('bucket', prefix='k')),
+                             [])
+
+    def test_deletion_error(self):
+        '''Raises DeleteException on key.delete() error'''
+        key = self.bucket.new_key('key')
+        exception = S3ResponseError(404, 'Not Found')
+        with mock.patch.object(self.backend.conn, 'get_bucket', return_value=self.bucket):
+            with mock.patch.object(key, 'delete', side_effect=exception):
+                with self.assertRaises(DeleteException):
+                    self.backend.delete('bucket', 'key', 1)
+
+
 class Bucket(object):
     '''A mock bucket.'''
 
@@ -90,8 +108,11 @@ class Bucket(object):
 
     def new_key(self, key):
         if key not in self.keys:
-            self.keys[key] = Key()
+            self.keys[key] = Key(self, key)
         return self.keys[key]
+
+    def delete_key(self, key):
+        del self.keys[key]
 
     def list(self, prefix, delimiter, headers=None):
         prefix = prefix or ''
@@ -104,9 +125,11 @@ class Bucket(object):
 
 class Key(object):
     '''S3 key'''
-    def __init__(self):
+    def __init__(self, bucket, key):
         self.data = ''
         self.headers = {}
+        self.bucket = bucket
+        self.key = key
 
     @property
     def size(self):
@@ -118,6 +141,9 @@ class Key(object):
 
     def get_contents_to_file(self, fobj, headers=None):
         fobj.write(self.data)
+
+    def delete(self, headers=None):
+        self.bucket.delete_key(self.key)
 
 
 class Multi(object):

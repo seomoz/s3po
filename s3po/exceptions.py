@@ -14,3 +14,8 @@ class DownloadException(S3POException):
 class UploadException(S3POException):
     '''An error while uploading'''
     pass
+
+
+class DeleteException(S3POException):
+    '''An error while deleting'''
+    pass

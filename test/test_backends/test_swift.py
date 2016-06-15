@@ -7,7 +7,7 @@ import mock
 from base import BaseTest
 
 from s3po.backends.swift import Swift
-from s3po.exceptions import UploadException, DownloadException
+from s3po.exceptions import UploadException, DownloadException, DeleteException
 
 
 class SwiftBackendTest(BaseTest):
@@ -68,3 +68,9 @@ class SwiftBackendTest(BaseTest):
                                                (None, [])]
         self.assertEqual(list(self.backend.list('bucket')),
                          ['key'])
+
+    def test_delete(self):
+        '''Raises DeleteException when Swift raises.'''
+        self.conn.delete_object.side_effect = ClientException('Failed to delete')
+        with self.assertRaises(DeleteException):
+            self.backend.delete('bucket', 'key', 1)
