@@ -25,7 +25,7 @@ from setuptools import setup
 
 setup(
     name             = 's3po',
-    version          = '0.4.6',
+    version          = '0.4.7',
     description      = 'An uploading daemon for S3',
     long_description = '''Boto is a wonderful library. This is just a little
         help for dealing with multipart uploads, batch uploading with gevent
