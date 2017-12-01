@@ -139,6 +139,5 @@ vagrant up
 vagrant ssh
 
 # On the vagrant instance
-cd /vagrant
 make test
 ```
