@@ -12,3 +12,5 @@ aws_secret_access_key = not-a-real-key' > ~/.boto
     cd /vagrant
     sudo pip install -r requirements.txt
 )
+
+echo $'\ncd /vagrant' >> ~/.profile
