@@ -1,7 +1,7 @@
 '''Talk to S3'''
 
 from cStringIO import StringIO
-from boto3.exception import S3ResponseError
+from boto.exception import S3ResponseError
 
 import mock
 from collections import namedtuple

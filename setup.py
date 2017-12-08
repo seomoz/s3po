@@ -37,7 +37,7 @@ setup(
     license='MIT',
     platforms='Posix; MacOS X',
     install_requires=[
-        'boto3',
+        'boto',
         'coverage',
         'gevent',
         'mock',

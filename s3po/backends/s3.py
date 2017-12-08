@@ -1,8 +1,8 @@
 '''Deal with S3.'''
 
 
-from boto3.s3.connection import S3Connection
-from boto3.exception import S3ResponseError, BotoServerError, BotoClientError
+from boto.s3.connection import S3Connection
+from boto.exception import S3ResponseError, BotoServerError, BotoClientError
 from cStringIO import StringIO
 
 from ..util import CountFile, retry, logger
