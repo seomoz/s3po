@@ -38,6 +38,7 @@ class Backoff(object):
         return func
 
 
+# Could the connection error be due to how this is implemented?
 def retry(count,
     exceptions=(Exception), sleep=None, policy=Backoff.exponential(30, 2)):
     '''Decorator for retrying a function count times'''
