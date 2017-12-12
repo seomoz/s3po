@@ -85,6 +85,7 @@ class S3(object):
                 logger.info('Uploading chunk %s', count)
                 part = data[0:self.chunk_size]
                 retry(
+                    # connection reset error stacktrace at below line
                     retries)(multi.upload_part_from_file)(StringIO(part), count)
                 data = (
                     data[self.chunk_size:] +

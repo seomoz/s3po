@@ -53,6 +53,7 @@ class Connection(object):
             return self.backend.upload(
                 bucket, key, StringIO(obj_or_data), retries, headers)
         else:
+            # connection reset error stacktrace at below line
             return self.backend.upload(bucket, key, obj_or_data, retries, headers)
 
     def upload_file(self, bucket, key, path, headers=None, retries=3):
