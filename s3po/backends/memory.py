@@ -19,7 +19,7 @@ class Memory(object):
         else:
             fobj.write(obj)
 
-    def upload(self, bucket, key, fobj, retries, headers=None):
+    def upload(self, bucket, key, fobj, retries, headers=None, extra=None):
         '''Upload the contents of fobj to bucket/key with headers'''
         self.buckets[bucket][key] = fobj.read()
 
