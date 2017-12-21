@@ -12,10 +12,10 @@ from ..exceptions import DeleteException, DownloadException, UploadException
 
 class S3(object):
     '''Our connection to S3'''
-    # How big must a file get before it's multiparted. Also how big the chunks
-    # are that we'll read
-    chunk_size = 50 * 1024 * 1204
-    min_chunk_size = 5 * 1024 * 1024
+    # How big must a file get before it's multiparted.
+    multipart_threshold = 5 * 1024 * 1204 * 1024
+    # Size of chunks for multipart uploads
+    multipart_chunk_size = 50 * 1024 * 1204
 
     def __init__(self, *args, **kwargs):
         self.conn = boto3.resource('s3', *args, **kwargs)
@@ -29,8 +29,8 @@ class S3(object):
 
         key = bucket.Object(key)
         config = TransferConfig(
-            multipart_threshold=(2 * self.chunk_size),
-            multipart_chunksize=self.chunk_size,
+            multipart_threshold=self.multipart_threshold,
+            multipart_chunksize=self.multipart_chunk_size,
             use_threads=False,
             num_download_attempts=retries)
 
@@ -45,8 +45,8 @@ class S3(object):
 
         key = bucket.Object(key)
         config = TransferConfig(
-            multipart_threshold=(2 * self.chunk_size),
-            multipart_chunksize=self.chunk_size,
+            multipart_threshold=self.multipart_threshold,
+            multipart_chunksize=self.multipart_chunk_size,
             use_threads=False,
             num_download_attempts=retries)
         try:
