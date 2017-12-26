@@ -4,7 +4,8 @@ from cStringIO import StringIO
 from swiftclient.exceptions import ClientException
 
 import mock
-from base import BaseTest
+
+from test.base import BaseTest
 
 from s3po.backends.swift import Swift
 from s3po.exceptions import UploadException, DownloadException, DeleteException

@@ -5,7 +5,7 @@ import os
 from cStringIO import StringIO
 
 # Internal imports
-from .util import retry, logger
+from .util import logger
 from .backends.s3 import S3
 from .backends.swift import Swift
 from .backends.memory import Memory
@@ -46,21 +46,29 @@ class Connection(object):
         finally:
             self.backend = original
 
-    def upload(self, bucket, key, obj_or_data, headers=None, retries=3):
+    def upload(self, bucket, key, obj_or_data, headers=None, extra=None, retries=3):
         '''Upload the provided string or file object to bucket/key'''
         logger.info('Uploading to %s / %s', bucket, key)
+        opts = {}
+        if extra:
+            opts['extra'] = extra
+        if headers:
+            opts['headers'] = headers
         if isinstance(obj_or_data, basestring):
             return self.backend.upload(
-                bucket, key, StringIO(obj_or_data), retries, headers)
+                bucket, key, StringIO(obj_or_data), retries=retries, **opts)
         else:
-            return self.backend.upload(bucket, key, obj_or_data, retries, headers)
+            return self.backend.upload(
+                bucket, key, obj_or_data, retries=retries, **opts)
 
-    def upload_file(self, bucket, key, path, headers=None, retries=3):
+    def upload_file(self, bucket, key, path, headers=None, extra=None, retries=3):
         '''Upload the file at path to bucket/key. This method is important for
         use in batch mode, so that the file object can be used with the right
         context management'''
         with open(os.path.abspath(path)) as fobj:
-            return self.upload(bucket, key, fobj, headers, retries)
+            return self.upload(
+                bucket, key, fobj,
+                headers=headers, extra=extra, retries=retries)
 
     def download(self, bucket, key, obj=None, headers=None, retries=3):
         '''Download to either the object or return a string'''
