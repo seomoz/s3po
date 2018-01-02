@@ -37,7 +37,8 @@ class S3(object):
         try:
             key.download_fileobj(destination, Config=config, ExtraArgs=extra)
         except (ClientError, BotoCoreError, Boto3Error) as exc:
-            raise DownloadException('Failed to download: %s' % exc.message)
+            raise DownloadException('Failed to download s3://{}/{}: {}'.format(
+                bucket, key, exc.message))
 
     def upload(self, bucket, key, source, retries, extra=None):
         '''Upload the contents of source to bucket/key'''
