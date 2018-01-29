@@ -3,6 +3,7 @@
 import contextlib
 import os
 from six import StringIO
+from six import string_types
 
 # Internal imports
 from .util import logger
@@ -54,7 +55,7 @@ class Connection(object):
             opts['extra'] = extra
         if headers:
             opts['headers'] = headers
-        if isinstance(obj_or_data, basestring):
+        if isinstance(obj_or_data, string_types):
             return self.backend.upload(
                 bucket, key, StringIO(obj_or_data), retries=retries, **opts)
         else:

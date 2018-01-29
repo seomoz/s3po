@@ -1,6 +1,7 @@
 '''Batching with gevent'''
 
 import sys
+from six import reraise
 if 'threading' in sys.modules:
     del sys.modules['threading']
 from gevent import monkey
@@ -54,7 +55,7 @@ class Batch(object):
         # Wait for all the jobs in the pool to complete
         self.wait()
         if typ:   # pragma: no cover
-            raise typ, val, trace
+            reraise(typ, val, trace)
 
     def wait(self):
         '''Wait until all our jobs are done'''

@@ -38,7 +38,7 @@ class S3(object):
             key.download_fileobj(destination, Config=config, ExtraArgs=extra)
         except (ClientError, BotoCoreError, Boto3Error) as exc:
             raise DownloadException('Failed to download s3://{}/{}: {}'.format(
-                bucket, key, exc.message))
+                bucket, key, exc))
 
     def upload(self, bucket, key, source, retries, extra=None):
         '''Upload the contents of source to bucket/key'''
@@ -55,7 +55,7 @@ class S3(object):
             return True
         except (ClientError, BotoCoreError, Boto3Error) as ex:
             raise UploadException('Failed to upload s3://{}/{}: {}'.format(
-                bucket, key, ex.message))
+                bucket, key, ex))
 
     def _list_retry(self, retries, bucket, **kwargs):
         @retry(retries)
@@ -91,6 +91,6 @@ class S3(object):
             except (ClientError, BotoCoreError, Boto3Error) as exc:
                 raise DeleteException(
                     'Failed to delete %s/%s: %s(%s)' %
-                    (bucket, key, exc.__class__.__name__, exc.message))
+                    (bucket, key, exc.__class__.__name__, exc))
 
         return func()
