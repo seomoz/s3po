@@ -1,6 +1,6 @@
 '''Talk to S3'''
 
-from cStringIO import StringIO
+from six import StringIO
 from botocore.exceptions import BotoCoreError, ClientError
 
 import mock

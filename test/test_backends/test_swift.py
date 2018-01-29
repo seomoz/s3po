@@ -1,6 +1,6 @@
 '''Talk to Swift'''
 
-from cStringIO import StringIO
+from six import StringIO
 from swiftclient.exceptions import ClientException
 
 import mock

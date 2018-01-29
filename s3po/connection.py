@@ -2,7 +2,7 @@
 
 import contextlib
 import os
-from cStringIO import StringIO
+from six import StringIO
 
 # Internal imports
 from .util import logger
