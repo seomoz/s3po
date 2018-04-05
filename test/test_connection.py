@@ -1,7 +1,7 @@
 '''Test our Connection'''
 
 from test.base import BaseTest
-from cStringIO import StringIO
+from six import StringIO
 
 from s3po.exceptions import DownloadException, DeleteException
 

@@ -42,7 +42,8 @@ setup(
         'gevent',
         'mock',
         'nose',
-        'python_swiftclient'
+        'python_swiftclient',
+        'six'
     ],
     classifiers=[
         'License :: OSI Approved :: MIT License',
