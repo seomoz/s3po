@@ -30,8 +30,7 @@ setup(
     long_description='''Boto is a wonderful library. This is just a little
         help for dealing with multipart uploads, batch uploading with gevent
         and getting some help when mocking''',
-    author='Dan Lecocq',
-    author_email='dan@moz.com',
+    author='Dan Lecocq <https://github.com/dlecocq>',
     url='http://github.com/seomoz/s3po',
     packages=['s3po', 's3po.backends'],
     license='MIT',
