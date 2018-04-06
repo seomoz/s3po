@@ -66,7 +66,7 @@ class Connection(object):
         '''Upload the file at path to bucket/key. This method is important for
         use in batch mode, so that the file object can be used with the right
         context management'''
-        with open(os.path.abspath(path)) as fobj:
+        with open(os.path.abspath(path), 'rb') as fobj:
             return self.upload(
                 bucket, key, fobj,
                 headers=headers, extra=extra, retries=retries)
