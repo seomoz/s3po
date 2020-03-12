@@ -25,12 +25,13 @@ from setuptools import setup
 
 setup(
     name='s3po',
-    version='0.6.0',
+    version='0.6.1',
     description='An uploading daemon for S3',
     long_description='''Boto is a wonderful library. This is just a little
         help for dealing with multipart uploads, batch uploading with gevent
         and getting some help when mocking''',
-    author='Dan Lecocq <https://github.com/dlecocq>',
+    author='Moz, Inc.',
+    author_email="turbo@moz.com",
     url='http://github.com/seomoz/s3po',
     packages=['s3po', 's3po.backends'],
     license='MIT',
@@ -54,5 +55,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ]
 )
