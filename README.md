@@ -140,4 +140,5 @@ vagrant ssh
 
 # On the vagrant instance
 make test
+make test3 # To run the tests under Python 3
 ```

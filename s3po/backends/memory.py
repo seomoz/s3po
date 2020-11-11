@@ -14,6 +14,13 @@ class Memory(object):
     def download(self, bucket, key, fobj, retries, headers=None):
         '''Download the contents of bucket/key to fobj'''
         obj = self.buckets[bucket].get(key)
+
+        # if we stored a bytes object, decode it into a string
+        try:
+            obj = obj.decode('ascii')
+        except AttributeError:
+            pass
+
         if not obj:
             raise DownloadException('%s / %s not found' % (bucket, key))
         else:
